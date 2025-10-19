@@ -1,273 +1,157 @@
-/* --- Global Variables and Base Styles --- */
 :root {
     --primary-color: #007BFF; /* A vibrant educational blue */
-    --secondary-color: #6c757d; /* A neutral secondary color */
-    --success-color: #28a745; /* Green for action buttons */
+    --secondary-color: #28a745; /* Green for success/action */
     --background-color: #f8f9fa; /* Light grey paper-like background */
     --card-background: #ffffff; /* White card background */
     --text-color: #343a40; /* Dark text */
-    --border-color: #dee2e6;
     --border-radius: 8px;
     --transition-speed: 0.3s;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);
+    margin: 0;
+    padding-top: 60px; /* Space for a fixed navbar */
     line-height: 1.6;
 }
 
-h1, h2, h3 {
-    color: var(--primary-color);
-}
-
-/* --- Main Layout Containers --- */
-.content-container, .container {
+.content-container {
     max-width: 900px;
     margin: 40px auto;
     padding: 20px;
     background-color: var(--card-background);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border-radius: var(--border-radius);
 }
 
-/* --- Welcome Page (index.html) --- */
-.welcome-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    text-align: center;
-    background-color: var(--background-color);
-}
-
-.welcome-container h1 {
-    font-size: 2.5rem;
-    margin-bottom: 30px;
-}
-
-.button-group {
-    display: flex;
-    gap: 20px;
-}
-
-/* --- Login Pages --- */
-.login-page body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-
-.form-container {
-    width: 100%;
-    max-width: 400px;
-    padding: 30px;
-    background: var(--card-background);
-    border-radius: var(--border-radius);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
-
-.form-container h2 {
+h1 {
+    color: var(--primary-color);
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
     margin-bottom: 25px;
+}
+
+/* Forms and Inputs */
+.form-card {
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: var(--border-radius);
+    background-color: #f1f7fe; /* Slightly different background for the form area */
 }
 
 .form-group {
     margin-bottom: 20px;
-    text-align: left;
 }
 
-.form-group label {
+label {
     display: block;
     font-weight: 600;
     margin-bottom: 8px;
+    color: var(--primary-color);
 }
 
-.form-group input, .form-group select {
+input[type="file"], select {
+    display: block;
     width: 100%;
-    padding: 12px;
-    border: 1px solid var(--border-color);
+    padding: 10px;
+    border: 1px solid #ced4da;
     border-radius: 4px;
+    box-sizing: border-box; /* Include padding in element's total width/height */
 }
 
-.error-message {
-    color: #dc3545;
-    margin-top: 15px;
-    font-size: 14px;
-    min-height: 20px;
-}
-
-/* --- General Button Styles --- */
-.btn {
+.radio-group label {
     display: inline-block;
-    padding: 12px 25px;
+    font-weight: normal;
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 20px;
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
     font-size: 16px;
     font-weight: bold;
-    text-decoration: none;
-    transition: all var(--transition-speed);
-    width: 100%; /* Make buttons full-width in forms by default */
+    transition: background-color var(--transition-speed), transform 0.1s;
+    margin-top: 10px;
 }
 
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.btn-primary, .form-container button[type="submit"] {
+.primary-btn {
     background-color: var(--primary-color);
     color: white;
 }
-.btn-primary:hover, .form-container button[type="submit"]:hover {
+
+.primary-btn:hover {
     background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.btn-secondary {
+.secondary-btn {
     background-color: var(--secondary-color);
     color: white;
-}
-.btn-secondary:hover {
-    background-color: #5a6268;
+    margin-left: 15px;
 }
 
-/* --- Dashboard Styles (Teacher & Admin) --- */
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 15px;
-    margin-bottom: 30px;
+.secondary-btn:hover {
+    background-color: #1e7e34;
 }
 
-.dashboard-header p {
-    margin-top: 5px;
-    color: #6c757d;
-}
-
-.dashboard-header .btn {
-    width: auto;
-    padding: 8px 15px;
-}
-
-.dashboard-cards, .dashboard-menu {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 25px;
-}
-
-.card, .menu-item {
-    background: #fff;
-    padding: 25px;
-    border-radius: var(--border-radius);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    border: 1px solid var(--border-color);
-}
-
-.card h2, .menu-item h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-}
-
-.card p, .menu-item p {
-    margin-bottom: 20px;
-}
-
-.card .btn, .menu-item .btn {
-    width: auto; /* Buttons in cards shouldn't be full-width */
-    background-color: var(--success-color);
-}
-.card .btn:hover, .menu-item .btn:hover {
-    background-color: #218838;
-}
-
-/* --- Attendance Page Styles --- */
-#student-list-container {
-    margin: 20px 0;
-}
-
-.student-row {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.student-row:last-child {
-    border-bottom: none;
-}
-
-.student-row label {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    cursor: pointer;
-}
-
-.student-row input[type="checkbox"] {
-    margin-right: 15px;
-    transform: scale(1.2); /* Make checkbox slightly larger */
-}
-
-#save-attendance-btn {
-    width: auto;
-    margin-top: 20px;
-}
-
-/* --- Content Generation Page Styles --- */
-.form-card {
-    padding: 30px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    background-color: #fdfdfd;
-}
-
-.radio-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.radio-group label {
-    font-weight: normal;
-    display: flex;
-    align-items: center;
-}
-
-.radio-group input[type="radio"] {
-    margin-right: 8px;
+/* Status and Results */
+.status-message {
+    margin-top: 15px;
+    font-style: italic;
 }
 
 .result-box {
     margin-top: 30px;
     padding: 20px;
-    border: 1px solid var(--border-color);
+    border: 1px solid #495057;
     border-left: 5px solid var(--primary-color);
     border-radius: var(--border-radius);
     background-color: #ffffff;
 }
 
 .content-output {
-    min-height: 150px;
+    min-height: 100px;
     padding: 15px;
     margin-top: 10px;
     background-color: #fafafa;
-    border: 1px dashed #ccc;
-    white-space: pre-wrap; /* Preserves formatting from the AI */
-    line-height: 1.7;
+    border: 1px dashed #ced4da;
+    white-space: pre-wrap;
 }
 
 .hidden {
     display: none !important;
 }
+
+/* #generated-content {
+    font-size: 16px;
+    line-height: 1.5;
+    padding: 0 24px;       /* left and right padding only */
+    /* width: 100%;           full width for A4 paper */
+    /* box-sizing: border-box; */
+/* } */ 
+
+/* #result-section, .content-container {
+    width: 100% !important;
+    margin: 0 !important;
+    max-width: none !important;
+} */
+
+.pdf-full-width {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 32px; /* Optional, add more whitespace, not too much! */
+    box-sizing: border-box;
+    background: white; /* Clean BG */
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+

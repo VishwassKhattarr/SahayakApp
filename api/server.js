@@ -31,36 +31,35 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- Middleware ---
-// Configure CORS with specific options
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:5000'], // Allow both backend and frontend origins
+    origin: ['http://localhost:3000', 'http://localhost:5000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
-app.use(express.json()); // To parse JSON request bodies
-app.use(express.urlencoded({ extended: true })); // To parse URL-encoded request bodies
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // --- Static File Serving ---
-// Serve the files from the 'uploads' directory
+// Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Serve assets like CSS and JS from their specific paths within the 'src' directory
+// Serve assets like CSS and JS from their specific paths within 'src'
 app.use('/src', express.static(path.join(__dirname, '../frontend/src')));
 
-// Serve the HTML pages from 'frontend/src/pages' as the main/root directory
-// ✅ INCLUDED FIX: This now automatically resolves '.html' extensions for clean URLs.
+// ✅ 1. Serve index.html from the 'public' folder for the root URL ('/')
+app.use(express.static(path.join(__dirname, '../frontend/public')));
+
+// ✅ 2. Serve all other pages from 'src/pages', resolving the .html extension
 app.use(express.static(path.join(__dirname, '../frontend/src/pages'), {
     extensions: ['html']
 }));
 
 
 // --- API Routes ---
-// A simple test route to check if the server is up
 app.get('/api', (req, res) => {
   res.send('SahayakApp Backend is running!');
 });
 
-// Mount your routes under the '/api' prefix
 app.use('/api/content', contentRoutes);
 app.use('/api/auth', authRoutes);
 
