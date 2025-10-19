@@ -4,35 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Dashboard - Sahayak</title>
-    <link rel="stylesheet" href="style.css"> </head>
+    <link rel="stylesheet" href="/src/styles/style.css"> 
+</head>
 <body>
-
     <main class="content-container">
-        <header class="dashboard-header">
-             <h1>Teacher Dashboard</h1>
-             <p>Welcome! Select an action to get started.</p>
+        <header class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 15px;">
+             <div>
+                <h1>Teacher Dashboard</h1>
+                <p>Welcome, <span id="teacher-name">Teacher</span>!</p>
+             </div>
+             <button id="logout-btn" class="btn secondary-btn">Logout</button>
         </header>
        
-        <div class="dashboard-cards">
-            <div class="card">
+        <div class="dashboard-cards" style="display: flex; gap: 20px; margin-top: 30px;">
+            <div class="card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1;">
                 <h2>Attendance</h2>
                 <p>Mark and view daily student attendance.</p>
-                <a href="attendance.html" class="btn">Mark Attendance</a>
+                <a href="/attendance" class="btn">Mark Attendance</a>
             </div>
             
-            <div class="card">
-                <h2>Content</h2>
-                <p>Upload and manage educational content for students.</p>
-                <a href="upload.html" class="btn">Manage Content</a>
-            </div>
-            
-            <div class="card">
-                <h2>Account</h2>
-                <p>Log out of your account to end your session securely.</p>
-                <a href="login.html" class="btn">Log Out</a>
+            <div class="card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1;">
+                <h2>Content Generation</h2>
+                <p>Create lesson summaries and questions from PDF notes.</p>
+                <a href="/content-generation" class="btn">Generate Content</a>
             </div>
         </div>
     </main>
 
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Display teacher name from localStorage
+        const teacherData = JSON.parse(localStorage.getItem('teacherData') || '{}');
+        document.getElementById('teacher-name').textContent = teacherData.name || 'Teacher';
+        
+        // Find the logout button and add a click event listener
+        const logoutBtn = document.getElementById('logout-btn');
+        logoutBtn.addEventListener('click', () => {
+            // Clear the user's token and data from storage
+            localStorage.removeItem('token');
+            localStorage.removeItem('teacherData');
+            
+            // ✅ Redirect to the homepage (index.html)
+            window.location.href = '/';
+        });
+    });
+    </script>
 </body>
 </html>

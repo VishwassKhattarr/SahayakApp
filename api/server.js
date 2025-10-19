@@ -44,23 +44,24 @@ app.use(express.urlencoded({ extended: true })); // To parse URL-encoded request
 // Serve the files from the 'uploads' directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Serve static files from the frontend/public directory
-app.use(express.static(path.join(__dirname, '../frontend/public')));
-
-// Serve files from the frontend/src directory
+// Serve assets like CSS and JS from their specific paths within the 'src' directory
 app.use('/src', express.static(path.join(__dirname, '../frontend/src')));
 
-// Serve pages from the frontend/src/pages directory
-app.use('/pages', express.static(path.join(__dirname, '../frontend/src/pages')));
+// Serve the HTML pages from 'frontend/src/pages' as the main/root directory
+// ✅ INCLUDED FIX: This now automatically resolves '.html' extensions for clean URLs.
+app.use(express.static(path.join(__dirname, '../frontend/src/pages'), {
+    extensions: ['html']
+}));
+
 
 // --- API Routes ---
 // A simple test route to check if the server is up
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
   res.send('SahayakApp Backend is running!');
 });
 
 // Mount your routes under the '/api' prefix
-app.use('/api', contentRoutes);
+app.use('/api/content', contentRoutes);
 app.use('/api/auth', authRoutes);
 
 // --- Server Startup ---

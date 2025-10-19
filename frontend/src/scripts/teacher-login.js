@@ -12,8 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.getElementById('password').value;
 
         try {
-            // ✅ CORRECTION: Use a relative path. The browser knows the host.
-            const response = await fetch('/api/auth/login', { // Changed URL to be more standard
+            // ✅ CORRECTION: Use the full, correct relative path to the teacher login endpoint.
+            const response = await fetch('/api/auth/teacher/login', { 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -24,8 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (response.ok) { // Check for a 2xx status code is more reliable
-                // If login is successful, redirect to the attendance page
-                window.location.href = '/teacher-dashboard.html'; // Use root-relative path
+                // If login is successful, store the token and teacher data
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('teacherData', JSON.stringify(data.teacher));
+
+                // Redirect to the teacher dashboard page
+                window.location.href = '/teacher-dashboard.html';
             } else {
                 // If login fails, display the error message from the server
                 errorMessage.textContent = data.message || 'Login failed. Please try again.';
