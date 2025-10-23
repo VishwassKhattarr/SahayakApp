@@ -4,50 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Dashboard - Sahayak</title>
-    <link rel="stylesheet" href="/src/styles/style.css"> 
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+    <div id="navbar-placeholder"></div>
     <main class="content-container">
-        <header class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 15px;">
+        <header class="dashboard-header">
              <div>
                 <h1>Teacher Dashboard</h1>
                 <p>Welcome, <span id="teacher-name">Teacher</span>!</p>
              </div>
              <button id="logout-btn" class="btn secondary-btn">Logout</button>
         </header>
-       
-        <div class="dashboard-cards" style="display: flex; gap: 20px; margin-top: 30px;">
-            <div class="card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1;">
+
+        <div class="dashboard-cards">
+            <div class="card">
                 <h2>Attendance</h2>
                 <p>Mark and view daily student attendance.</p>
-                <a href="/attendance" class="btn">Mark Attendance</a>
+                <a href="attendance.html" class="btn primary-btn">Mark Attendance</a>
             </div>
-            
-            <div class="card" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1;">
+
+            <div class="card">
                 <h2>Content Generation</h2>
                 <p>Create lesson summaries and questions from PDF notes.</p>
-                <a href="/content-generation" class="btn">Generate Content</a>
+                <a href="content-generation.html" class="btn primary-btn">Generate Content</a>
             </div>
         </div>
     </main>
 
+    <script src="../scripts/auth-check.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Check authentication on page load
+        checkTeacherAuth();
+
         // Display teacher name from localStorage
         const teacherData = JSON.parse(localStorage.getItem('teacherData') || '{}');
         document.getElementById('teacher-name').textContent = teacherData.name || 'Teacher';
-        
+
         // Find the logout button and add a click event listener
         const logoutBtn = document.getElementById('logout-btn');
         logoutBtn.addEventListener('click', () => {
             // Clear the user's token and data from storage
             localStorage.removeItem('token');
             localStorage.removeItem('teacherData');
-            
+
             // ✅ Redirect to the homepage (index.html)
             window.location.href = '/';
         });
     });
     </script>
+    <script src="../scripts/navbar.js"></script>
+    <script src="../scripts/include-navbar.js"></script>
 </body>
 </html>

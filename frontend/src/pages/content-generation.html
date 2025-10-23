@@ -59,8 +59,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Content Generator - Sahayak</title>
-    <!-- Assuming style.css is linked correctly here -->
-    <link rel="stylesheet" href="/src/styles/style.css"> 
+    <!-- style.css for pages served from src/pages -->
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <div id="navbar-placeholder"></div>
@@ -105,18 +105,27 @@
         </section>
     </main>
 
+    <script src="../scripts/auth-check.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Check authentication on page load
+        checkTeacherAuth();
+    });
+    </script>
+
     <!-- Load jspdf library for client-side PDF generation -->
      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
      <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script> -->
 
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> -->
-    
-    <!-- Placeholder for global JS/navbar -->
-    <script src="../scripts/navbar.js"></script> 
-    
+
+    <!-- Navbar is inlined in pages; no external navbar.js required -->
+    <script src="../scripts/navbar.js"></script>
+    <script src="../scripts/include-navbar.js"></script>
+
     <!-- Load the new PDF utility -->
     <script type="module" src="../scripts/pdfUtils.js"></script>
-    
+
     <!-- Load the main logic -->
     <script type="module" src="../scripts/content-generation.js"></script>
 </body>

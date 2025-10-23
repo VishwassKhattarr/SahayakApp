@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('adminData', JSON.stringify(data.admin));
                 
                 // Redirect to the admin dashboard
-                window.location.href = '/admin-dashboard.html';
+                window.location.href = '/pages/admin-dashboard.html';
             } else {
                 // Display the error message from the server
                 errorMessage.textContent = data.message || 'Admin login failed. Please try again.';

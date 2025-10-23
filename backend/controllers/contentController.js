@@ -31,7 +31,7 @@ import { GlobalWorkerOptions } from 'pdfjs-dist/legacy/build/pdf.mjs';
 GlobalWorkerOptions.workerSrc = pdfjsWorkerSrc.href; // Use the corrected URL object
 
 // Initialize the AI client securely using the environment variable
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
 
 /**
  * Helper function to create the prompt for the LLM.

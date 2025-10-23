@@ -4,19 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance - Sahayak</title>
-    <link rel="stylesheet" href="/src/styles/style.css">
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <div id="navbar-placeholder"></div>
 
     <main class="content-container">
-        <h1>Mark Attendance</h1>
-        <div id="student-list-container">
+        <header class="dashboard-header">
+            <div>
+                <h1>Mark Attendance</h1>
+                <p>Record daily student attendance</p>
+            </div>
+            <a href="teacher-dashboard.html" class="btn secondary-btn">Back to Dashboard</a>
+        </header>
+
+        <div id="student-list-container" class="form-card">
             <p>Loading students...</p>
         </div>
-        <button id="save-attendance-btn" class="btn">Save Attendance</button>
+        <button id="save-attendance-btn" class="btn primary-btn">Save Attendance</button>
         <p id="status-message" class="status-message"></p>
     </main>
 
-    <script src="/scripts/navbar.js"></script> <script src="/scripts/attendance.js"></script> </body>
+    <script src="../scripts/auth-check.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Check authentication on page load
+        checkTeacherAuth();
+    });
+    </script>
+    <script src="../scripts/navbar.js"></script>
+    <script src="../scripts/include-navbar.js"></script>
+    <script src="../scripts/attendance.js"></script>
+</body>
 </html>

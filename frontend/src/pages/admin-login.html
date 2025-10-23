@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - Sahayak</title>
-    <link rel="stylesheet" href="/src/styles/style.css">
+    <link rel="stylesheet" href="/style.css">
 </head>
-<body class="login-page">
-    <div class="form-container">
-        <h2>Admin Login</h2>
-        <form id="admin-login-form" method="post">
+<body>
+
+    <main class="content-container">
+        <h1>Admin Login</h1>
+        <form id="admin-login-form" class="form-card" method="post">
             <div class="form-group">
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email" required>
@@ -22,8 +23,8 @@
         </form>
         <p id="error-message" class="error-message"></p>
         <a href="/">Back to Home</a>
-    </div>
+    </main>
 
-    <script src="/src/scripts/admin-login.js"></script>
+    <script src="../scripts/admin-login.js"></script>
 </body>
 </html>

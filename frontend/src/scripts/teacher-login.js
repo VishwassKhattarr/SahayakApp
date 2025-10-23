@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('teacherData', JSON.stringify(data.teacher));
 
                 // Redirect to the teacher dashboard page
-                window.location.href = '/teacher-dashboard.html';
+                window.location.href = '/pages/teacher-dashboard.html';
             } else {
                 // If login fails, display the error message from the server
                 errorMessage.textContent = data.message || 'Login failed. Please try again.';
