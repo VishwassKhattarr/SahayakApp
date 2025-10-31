@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Students - Sahayak</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <main class="content-container">
+    <h1>📂 Upload Student Data</h1>
+
+    <section class="admin-section">
+      <h2>Bulk Add / Update Students via CSV</h2>
+      <form id="student-csv-form">
+        <label for="student-csv">Choose CSV file (columns: name, email, roll_number, class_id, section_id, parent_contact)</label>
+        <input type="file" id="student-csv" accept=".csv" required />
+        <button class="btn" id="upload-student-csv-btn" type="button">Upload CSV</button>
+      </form>
+      <p id="csv-upload-status" class="status-message"></p>
+      <div id="csv-upload-summary" class="result-box hidden"></div>
+    </section>
+  </main>
+
+  <script src="../scripts/navbar-admin.js"></script>
+  <script src="../scripts/admin-upload-students.js"></script>
+</body>
+</html>

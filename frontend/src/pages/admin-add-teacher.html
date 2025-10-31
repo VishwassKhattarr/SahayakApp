@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Sahayak</title>
+    <!-- <link rel="stylesheet" href="/src/styles/style.css"> -->
+     <!-- <link rel="stylesheet" href="../../public/style.css"> -->
+      <link rel="stylesheet" href="/style.css">
+
+
+</head>
+<body>
+    <div id="navbar-placeholder"></div>
+    <main class="content-container">
+        <header class="dashboard-header">
+             <div>
+                <h1>Admin Dashboard</h1>
+                <p>Welcome, <span id="admin-name">Admin</span>!</p>
+             </div>
+        </header>
+
+        <div class="dashboard-content">
+            <p>Manage teachers, view students by class, and generate report cards.</p>
+
+            <!-- Teacher Management Section -->
+            <section class="admin-section">
+                <h2>Teacher Management</h2>
+                <form id="teacher-form">
+                    <input type="hidden" id="teacher-id">
+                    <div class="form-group">
+                        <label for="teacher-name">Name:</label>
+                        <input type="text" id="teacher-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="teacher-email">Email:</label>
+                        <input type="email" id="teacher-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="teacher-password">Password:</label>
+                        <input type="password" id="teacher-password" required>
+                    </div>
+                    <button type="submit" class="btn">Add/Update Teacher</button>
+                </form>
+                <div id="teacher-list">
+                    <h3>Teachers</h3>
+                    <ul id="teachers"></ul>
+                </div>
+            </section>
+
+            <!-- Student View by Class Section -->
+            <section class="admin-section">
+                <h2>View Students by Class</h2>
+                <div class="form-group">
+                    <label for="class-select">Select Class:</label>
+                    <select id="class-select">
+                        <option value="">Choose a class</option>
+                        <option value="Class 10A">Class 10A</option>
+                        <option value="Class 10B">Class 10B</option>
+                    </select>
+                    <button id="view-students-btn" class="btn">View Students</button>
+                </div>
+                <div id="student-list-container"></div>
+            </section>
+
+            <!-- Report Card Generation Section -->
+            <section class="admin-section">
+                <h2>Generate Report Card</h2>
+                <form id="report-card-form">
+                    <div class="form-group">
+                        <label for="student-select">Select Student:</label>
+                        <select id="student-select" required>
+                            <option value="">Choose a student</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Subject:</label>
+                        <input type="text" id="subject" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="marks">Marks:</label>
+                        <input type="number" id="marks" min="0" max="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="grade">Grade:</label>
+                        <input type="text" id="grade" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="term">Term:</label>
+                        <select id="term" required>
+                            <option value="Mid-term">Mid-term</option>
+                            <option value="Final">Final</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Save Report Card Entry</button>
+                </form>
+                <div id="report-card-list"></div>
+            </section>
+
+
+            <!-- Teacher CSV upload -->
+    <section class="admin-section" id="csv-upload-section">
+      <h2>Bulk Add / Update Teachers (CSV)</h2>
+      <div class="form-card">
+        <form id="teacher-csv-form">
+          <div class="form-group">
+            <label for="teacher-csv">Upload CSV (columns: name,email,password)</label>
+            <input type="file" id="teacher-csv" accept=".csv" required />
+          </div>
+          <button class="btn" id="upload-csv-btn" type="button">Upload Teachers CSV</button>
+          <p id="csv-upload-status" class="status-message"></p>
+        </form>
+        <div id="csv-upload-summary" class="result-box hidden"></div>
+      </div>
+    </section>
+
+    </main>
+
+    <script src="../scripts/auth-check.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Check authentication on page load
+        checkAdminAuth();
+
+        // Display admin name from localStorage
+        const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
+        document.getElementById('admin-name').textContent = adminData.name || 'Admin';
+    });
+    </script>
+    <script src="../scripts/navbar-admin.js"></script>
+    <script src="../scripts/admin-dashboard.js"></script>
+    <!-- <script src="/src/scripts/dashboard.js"></script> -->
+
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assign Teacher - Sahayak</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="navbar-placeholder"></div>
+
+  <main class="content-container">
+    <h1>🎓 Assign Teacher to Class</h1>
+
+    <form id="assign-form" class="assign-form">
+      <div class="form-group">
+        <label for="teacher">Teacher:</label>
+        <select id="teacher" required>
+          <option value="">-- Select Teacher --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="class">Class:</label>
+        <select id="class" required>
+          <option value="">-- Select Class --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="section">Section:</label>
+        <select id="section" required>
+          <option value="">-- Select Section --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="subject">Subject:</label>
+        <select id="subject" required>
+          <option value="">-- Select Subject --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="year">Academic Year:</label>
+        <select id="year" required>
+          <option value="">-- Select Year --</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn">✅ Assign Teacher</button>
+      <p id="status-message"></p>
+    </form>
+  </main>
+
+  <!-- ✅ correct relative paths -->
+  <script src="../scripts/navbar-admin.js"></script>
+  <script src="../scripts/admin-assign-teacher.js"></script>
+</body>
+</html>

@@ -203,12 +203,15 @@ export const uploadTeachersCsv = async (req, res) => {
     return res.status(400).json({ success: false, message: 'No CSV file uploaded' });
   }
 
-  const results = {
-    inserted: 0,
-    updated: 0,
-    invalid: [],
-    errors: []
-  };
+const results = {
+  inserted: 0,
+  updated: 0,
+  alreadyExists: 0,
+  invalid: [],
+  errors: []
+};
+
+
 
   const filePath = req.file.path;
 
@@ -245,34 +248,67 @@ export const uploadTeachersCsv = async (req, res) => {
         continue;
       }
 
+      // try {
+      //   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+      //   // ✅ PostgreSQL upsert syntax using ON CONFLICT
+      //   const query = `
+      //     INSERT INTO teachers (name, email, password)
+      //     VALUES ($1, $2, $3)
+      //     ON CONFLICT (email)
+      //     DO UPDATE SET
+      //       name = EXCLUDED.name,
+      //       password = EXCLUDED.password
+      //     RETURNING *;
+      //   `;
+
       try {
-        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+  // 🔍 Step 1: check if teacher already exists
+  const existing = await pool.query('SELECT * FROM teachers WHERE email = $1', [email]);
 
-        // ✅ PostgreSQL upsert syntax using ON CONFLICT
-        const query = `
-          INSERT INTO teachers (name, email, password)
-          VALUES ($1, $2, $3)
-          ON CONFLICT (email)
-          DO UPDATE SET
-            name = EXCLUDED.name,
-            password = EXCLUDED.password
-          RETURNING *;
-        `;
+  if (existing.rows.length > 0) {
+    // record already exists, skip insertion
+    results.alreadyExists++;
+    console.log(`⚠️ Teacher ${email} already exists, skipping.`);
+    continue; // skip to next row
+  }
 
-        console.log(`🔄 Executing query for ${email}`);
-        const { rows: updatedRows } = await pool.query(query, [name, email, hashedPassword]);
+  // else proceed to insert new teacher
+  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-        console.log(`✅ Query result: ${updatedRows.length} rows returned`);
-        if (updatedRows.length > 0) {
-          results.inserted++;
-          console.log(`📝 Teacher ${email} processed successfully`);
-        } else {
-          console.log(`⚠️ No rows returned for ${email}`);
-        }
-      } catch (err) {
-        console.error(`❌ DB error on row ${i + 1}:`, err.message);
-        results.errors.push({ row: i + 1, error: err.message });
-      }
+  const query = `
+    INSERT INTO teachers (name, email, password)
+    VALUES ($1, $2, $3)
+    RETURNING *;
+  `;
+
+  const { rows: insertedRows } = await pool.query(query, [name, email, hashedPassword]);
+
+  if (insertedRows.length > 0) {
+    results.inserted++;
+    console.log(`📝 Teacher ${email} inserted successfully`);
+  }
+
+} catch (err) {
+  console.error(`❌ DB error on row ${i + 1}:`, err.message);
+  results.errors.push({ row: i + 1, error: err.message });
+}
+
+
+      //   console.log(`🔄 Executing query for ${email}`);
+      //   const { rows: updatedRows } = await pool.query(query, [name, email, hashedPassword]);
+
+      //   console.log(`✅ Query result: ${updatedRows.length} rows returned`);
+      //   if (updatedRows.length > 0) {
+      //     results.inserted++;
+      //     console.log(`📝 Teacher ${email} processed successfully`);
+      //   } else {
+      //     console.log(`⚠️ No rows returned for ${email}`);
+      //   }
+      // } catch (err) {
+      //   console.error(`❌ DB error on row ${i + 1}:`, err.message);
+      //   results.errors.push({ row: i + 1, error: err.message });
+      // }
     }
 
     console.log('📋 Final results:', results);
@@ -285,3 +321,39 @@ export const uploadTeachersCsv = async (req, res) => {
     return res.status(500).json({ success: false, error: err.message });
   }
 };
+
+export const addSingleTeacher = async (req, res) => {
+  const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ success: false, message: 'All fields are required.' });
+  }
+
+  try {
+    // Check if teacher already exists
+    const existing = await pool.query('SELECT * FROM teachers WHERE email = $1', [email]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ success: false, message: 'Teacher already exists.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+    const insertQuery = `
+      INSERT INTO teachers (name, email, password)
+      VALUES ($1, $2, $3)
+      RETURNING *;
+    `;
+    const { rows } = await pool.query(insertQuery, [name, email, hashedPassword]);
+
+    return res.json({
+      success: true,
+      message: `Teacher ${rows[0].name} added successfully.`,
+      teacher: rows[0],
+    });
+
+  } catch (err) {
+    console.error('❌ Error adding teacher:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+};
+

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>View Students - Sahayak</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="navbar-placeholder"></div>
+
+    <main class="content-container">
+      <h1>👩‍🎓 View Students</h1>
+
+      <section class="admin-section">
+        <div class="form-group">
+          <label for="class-filter">Filter by Class:</label>
+          <select id="class-filter">
+            <option value="">All Classes</option>
+          </select>
+          <button id="filter-btn" class="btn">Filter</button>
+        </div>
+
+        <div id="students-container" class="data-card">
+          <h2 class="data-title">All Students</h2>
+          <table id="students-table" class="styled-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Roll No</th>
+                <th>Class</th>
+                <th>Section</th>
+                <th>Parent Contact</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="../scripts/navbar-admin.js"></script>
+    <script src="../scripts/admin-view-students.js"></script>
+  </body>
+</html>

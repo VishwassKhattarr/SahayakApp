@@ -8,6 +8,7 @@ import verifyRoutes from './routes/verifyRoutes.js';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import reportRoutes from "./routes/reportRoutes.js";
 
 // ESM equivalent of __dirname and __filename
 const __filename = fileURLToPath(import.meta.url);
@@ -29,9 +30,11 @@ app.use('/api/content', contentRoutes);
 app.use('/api/auth', teacherRoutes);
 app.use('/api/auth', adminRoutes);
 app.use('/api/auth', verifyRoutes);
+app.use("/api/reports", reportRoutes);
 
 // Teacher upload routes (under /api for consistency)
 app.use('/api', adminRoutes);
+app.use("/api/reports", reportRoutes);
 
 // Simple root route
 // Serve root from public index if present, otherwise fallback to content generator
