@@ -5,6 +5,8 @@ import contentRoutes from './routes/contentRoutes.js';
 import teacherRoutes from './routes/teacherRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import verifyRoutes from './routes/verifyRoutes.js';
+import syllabusRoutes from './routes/syllabusRoutes.js';
+import submissionRoutes from './routes/submissionRoutes.js';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -31,6 +33,10 @@ app.use('/api/auth', teacherRoutes);
 app.use('/api/auth', adminRoutes);
 app.use('/api/auth', verifyRoutes);
 app.use("/api/reports", reportRoutes);
+
+// Syllabus Tracker routes
+app.use('/api/syllabus', syllabusRoutes);
+app.use('/api/submissions', submissionRoutes);
 
 // Teacher upload routes (under /api for consistency)
 app.use('/api', adminRoutes);

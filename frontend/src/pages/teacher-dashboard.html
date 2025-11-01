@@ -17,6 +17,12 @@
              <button id="logout-btn" class="btn secondary-btn">Logout</button>
         </header>
 
+        <section id="syllabus-tracker-section">
+            <h2>Syllabus Trackers</h2>
+            <div id="tracker-list-container">
+                <p>Loading syllabus trackers...</p>
+            </div>
+        </section>
         <div class="dashboard-cards">
             <div class="card">
                 <h2>Attendance</h2>
@@ -48,6 +54,7 @@
             // Clear the user's token and data from storage
             localStorage.removeItem('token');
             localStorage.removeItem('teacherData');
+            localStorage.removeItem('adminData'); // Clear all
 
             // ✅ Redirect to the homepage (index.html)
             window.location.href = '/';
@@ -56,5 +63,7 @@
     </script>
     <script src="../scripts/navbar.js"></script>
     <script src="../scripts/include-navbar.js"></script>
+    
+    <script src="../scripts/teacher-dashboard.js"></script>
 </body>
 </html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syllabus Details - Sahayak</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div id="navbar-placeholder"></div>
+
+    <main class="content-container">
+        <header class="dashboard-header">
+            <div>
+                <h1 id="syllabus-header">Loading Syllabus...</h1>
+                <p>Check off completed chapters to generate worksheets.</p>
+            </div>
+            <a href="teacher-dashboard.html" class="btn secondary-btn">Back to Dashboard</a>
+        </header>
+
+        <div id="chapter-list-container">
+            <p>Loading chapters...</p>
+        </div>
+
+        <p id="status-message" class="status-message"></p>
+        
+        </main>
+
+    <script src="../scripts/auth-check.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        checkTeacherAuth();
+    });
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script src="../scripts/navbar.js"></script>
+    <script src="../scripts/include-navbar.js"></script>
+    <script src="../scripts/syllabus-detail.js"></script>
+</body>
+</html>
