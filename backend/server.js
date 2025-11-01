@@ -21,8 +21,12 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware setup
 // Serve compiled/dev static from both src and public so pages can be reached
-app.use(express.static(path.join(__dirname, '..', 'frontend', 'src')));
+app.use(express.static(path.join(__dirname, '..', 'frontend', 'src','scripts')));
+app.use(express.static(path.join(__dirname, '..', 'frontend', 'src',)));
+
 app.use(express.static(path.join(__dirname, '..', 'frontend', 'public')));
+app.use('/scripts', express.static(path.join(__dirname, '..', 'frontend', 'src', 'scripts')));
+
 app.use(express.json());
 
 // Content generation routes

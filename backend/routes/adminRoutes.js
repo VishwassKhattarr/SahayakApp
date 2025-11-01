@@ -14,6 +14,7 @@ import { getAllSubjects } from '../controllers/subjectController.js';
 import { getAllYears } from '../controllers/yearController.js';
 import { uploadStudentsCsv } from '../controllers/studentUploadController.js';
 import { getAllStudents } from '../controllers/studentController.js';
+import { uploadTeachersCsv } from '../controllers/teacherUploadController.js';
 
 
 
@@ -64,7 +65,7 @@ router.post('/teachers/upload', upload.single('csvFile'), uploadTeachersCsv);
 router.put('/teachers/:id/status', toggleTeacherStatus);
 
 // POST /api/teachers/add - Add a single teacher
-import { uploadTeachersCsv } from '../controllers/teacherUploadController.js';
+
 
 router.post('/teachers/add', addSingleTeacher);
 

@@ -30,13 +30,13 @@ export const getAllStudents = async (req, res) => {
     if (class_id) {
       query += ` WHERE c.id = $1`;
       params.push(class_id);
-      console.log("🧩 Filtering by class_id:", class_id);
+      console.log("Filtering by class_id:", class_id);
     }
 
     query += ` ORDER BY s.id`;
 
     const result = await pool.query(query, params);
-    console.log(`✅ Students fetched: ${result.rowCount}`);
+    console.log(`Students fetched: ${result.rowCount}`);
     res.json({ success: true, students: result.rows });
   } catch (err) {
     console.error("❌ Error fetching students:", err);
