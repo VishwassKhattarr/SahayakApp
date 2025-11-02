@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Submissions - Sahayak</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div id="navbar-placeholder"></div>
+
+    <main class="content-container">
+        <header class="dashboard-header">
+            <div>
+                <h1 id="submission-header">Loading Class...</h1>
+                <p>Select a completed chapter to review student submissions.</p>
+            </div>
+            <a href="teacher-dashboard.html" class="btn secondary-btn">Back to Dashboard</a>
+        </header>
+
+        <section class="admin-section">
+            <h2>Completed Chapters</h2>
+            <div id="chapter-list-container" class="button-grid">
+                <p>Loading completed chapters...</p>
+            </div>
+        </section>
+
+        <section id="worksheet-section" class="data-card hidden">
+            <h2 id="worksheet-chapter-title">Student Submissions</h2>
+            
+            <div id="submission-stats" class="stats-box">
+                <p>Submissions: <span id="submitted-count">0</span> / <span id="total-count">0</span></p>
+            </div>
+
+            <div id="student-submission-list" class="list-group">
+                </div>
+        </section>
+
+    </main>
+
+    <script src="../scripts/auth-check.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        checkTeacherAuth();
+    });
+    </script>
+    
+    <script src="../scripts/navbar.js"></script>
+    <script src="../scripts/include-navbar.js"></script>
+    <script src="../scripts/worksheet-submissions.js"></script>
+</body>
+</html>

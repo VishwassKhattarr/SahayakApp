@@ -573,6 +573,7 @@ export const getSubmissionsForChapter = async (req, res) => {
 
 
         // Fetch students enrolled in the section and LEFT JOIN their submission (if it exists for this worksheet)
+        // ✅ MODIFICATION: Added student_answers_raw and ai_evaluation_details
         const query = `
             SELECT
                 s.id as student_id,
@@ -581,7 +582,9 @@ export const getSubmissionsForChapter = async (req, res) => {
                 ws.id as submission_id,
                 ws.submitted_at,
                 ws.ai_assigned_marks,
-                ws.is_likely_ai_generated
+                ws.is_likely_ai_generated,
+                ws.student_answers_raw,
+                ws.ai_evaluation_details
             FROM students s
             JOIN student_class_enrollments sce ON s.id = sce.student_id
             LEFT JOIN worksheet_submissions ws ON s.id = ws.student_id AND ws.generated_worksheet_id = $2 -- Join on specific worksheet ID

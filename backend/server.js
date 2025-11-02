@@ -71,8 +71,9 @@ app.get('/pages/:page', (req, res) => {
     const pagePath = path.join(__dirname, '..', 'frontend', 'src', 'pages', req.params.page);
     if (fs.existsSync(pagePath)) {
         // Check if the page requires authentication
-        const teacherPages = ['teacher-dashboard.html', 'attendance.html', 'content-generation.html'];
-        const adminPages = ['admin-dashboard.html'];
+        // ✅ ADDED worksheet-submissions.html here
+        const teacherPages = ['teacher-dashboard.html', 'attendance.html', 'content-generation.html', 'syllabus-detail.html', 'worksheet-submissions.html'];
+        const adminPages = ['admin-dashboard.html', 'admin-add-teacher.html', 'admin-assign-teacher.html', 'admin-upload-students.html', 'admin-view-students.html', 'admin-view-teachers.html'];
 
         if (teacherPages.includes(req.params.page) || adminPages.includes(req.params.page)) {
             // Apply authentication middleware for protected pages

@@ -5,7 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadSyllabusTrackers() {
-    const container = document.getElementById('tracker-list-container');
+    const syllabusContainer = document.getElementById('tracker-list-container');
+    // ✅ Get the new container
+    const submissionContainer = document.getElementById('submission-review-list-container');
     const token = localStorage.getItem('token');
 
     try {
@@ -14,25 +16,33 @@ async function loadSyllabusTrackers() {
         });
 
         if (!response.ok) {
-            container.innerHTML = '<p>Could not load syllabus trackers.</p>';
+            const errorMsg = '<p>Could not load data.</p>';
+            syllabusContainer.innerHTML = errorMsg;
+            submissionContainer.innerHTML = errorMsg;
             return;
         }
 
         const trackers = await response.json();
 
         if (trackers.length === 0) {
-            container.innerHTML = '<p>You have not been assigned any syllabus trackers yet.</p>';
+            const noDataMsg = '<p>You have not been assigned any classes yet.</p>';
+            syllabusContainer.innerHTML = noDataMsg;
+            submissionContainer.innerHTML = noDataMsg;
             return;
         }
 
-        container.innerHTML = ''; // Clear 'loading'
+        syllabusContainer.innerHTML = ''; // Clear 'loading'
+        submissionContainer.innerHTML = ''; // Clear 'loading'
+        
         trackers.forEach(tracker => {
-            // Use the new fields from the API
-            container.innerHTML += `
+            const fullClassName = `${tracker.full_class_name} - ${tracker.subject_name}`;
+
+            // ✅ Populate Syllabus Tracker List
+            syllabusContainer.innerHTML += `
                 <a href="/pages/syllabus-detail.html?id=${tracker.teacher_assignment_id}" class="tracker-link">
                     <div class="tracker-card">
                         <div class="tracker-header">
-                            <h3>${tracker.full_class_name} - ${tracker.subject_name}</h3>
+                            <h3>${fullClassName}</h3>
                             <span>${tracker.chapters_completed} / ${tracker.total_chapters} Chapters</span>
                         </div>
                         <div class="progress-bar-container">
@@ -43,10 +53,25 @@ async function loadSyllabusTrackers() {
                     </div>
                 </a>
             `;
+
+            // ✅ Populate Submission Review List
+            // This links to the new page we will create
+            submissionContainer.innerHTML += `
+                <a href="/pages/worksheet-submissions.html?id=${tracker.teacher_assignment_id}&name=${encodeURIComponent(fullClassName)}" class="tracker-link">
+                    <div class="tracker-card">
+                        <div class="tracker-header">
+                            <h3>${fullClassName}</h3>
+                            <span>Review Submissions</span>
+                        </div>
+                    </div>
+                </a>
+            `;
         });
 
     } catch (error) {
         console.error('Failed to load trackers:', error);
-        container.innerHTML = '<p>Error loading syllabus trackers.</p>';
+        const errorMsg = '<p>Error loading data.</p>';
+        syllabusContainer.innerHTML = errorMsg;
+        submissionContainer.innerHTML = errorMsg;
     }
 }
