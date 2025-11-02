@@ -38,9 +38,16 @@ app.use('/api/auth', adminRoutes);
 app.use('/api/auth', verifyRoutes);
 app.use("/api/reports", reportRoutes);
 
+// Teacher routes - ensure it's before any other routes using teacherRoutes
+app.use('/api/teacher', teacherRoutes);
+// Auth routes that also use teacherRoutes should come after
+app.use('/api/auth', teacherRoutes);
+
 // Syllabus Tracker routes
 app.use('/api/syllabus', syllabusRoutes);
 app.use('/api/submissions', submissionRoutes);
+
+
 
 // Teacher upload routes (under /api for consistency)
 app.use('/api', adminRoutes);

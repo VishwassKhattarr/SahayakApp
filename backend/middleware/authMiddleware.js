@@ -55,7 +55,7 @@
 // backend/middleware/authMiddleware.js
 import jwt from 'jsonwebtoken';
 
-export const verifyToken = (req, res, next) => {
+const verifyToken = (req, res, next) => {
   try {
     // 1) find token from Authorization header (Bearer), query, or cookie
     const token =
@@ -97,4 +97,7 @@ export const verifyToken = (req, res, next) => {
     }
   }
 };
+
+// Export both names for the same function
+export { verifyToken as protect, verifyToken };
 

@@ -1241,3 +1241,66 @@ body {
   color: var(--text-color);
   margin-top: 15px;
 }
+
+/* ======================================================= */
+/* Worksheet Submissions Styles */
+/* ======================================================= */
+
+#worksheet-section {
+    margin-top: 2rem;
+}
+
+.submission-details, .ai-remarks {
+    display: none;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+
+.btn-active {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.stats-box {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.list-group-item {
+    border: 1px solid #e9ecef;
+    margin-bottom: 0.5rem;
+    border-radius: 5px !important;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.answers-container, .remarks-container {
+    padding: 10px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.answer-item {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.answer-item:last-child {
+    border-bottom: none;
+}
+
+.badge {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+}
