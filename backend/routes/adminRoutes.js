@@ -48,7 +48,9 @@ const upload = multer({ storage });
 router.get('/teachers', getAllTeachers);
 
 router.get('/classes', getAllClasses);
+// router.get('/sections', getAllSections);
 router.get('/sections', getAllSections);
+
 router.get('/subjects', getAllSubjects);
 router.get('/academic_years', getAllYears);
 router.get('/students', getAllStudents);
