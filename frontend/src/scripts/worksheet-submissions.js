@@ -165,7 +165,6 @@ async function loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapter
                 const answerId = `answer-${uniqueId}`;
                 const remarkId = `remark-${uniqueId}`;
 
-                // --- Button Container ---
                 const actions = document.createElement('div');
                 actions.className = 'student-submission-actions';
 
@@ -193,12 +192,12 @@ async function loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapter
                 
                 const answerPre = document.createElement('pre');
                 
-                // ✅✅✅ THIS IS THE FIX ✅✅✅
-                // This block now has an 'else' to catch null/empty answers
+                // ✅ YEH LOGIC "BLANK" SCREEN KO FIX KAREGA
                 if (sub.student_answers_raw && sub.student_answers_raw.trim() !== '') {
                     answerPre.textContent = sub.student_answers_raw;
                 } else {
-                    answerPre.textContent = 'Error: Student answers were not found in the database. (Raw data is null or empty).';
+                    answerPre.textContent = 'Error: Student answers not found in database (data is null or empty).';
+                    answerPre.style.color = 'red';
                 }
                 
                 answerDiv.appendChild(answerH5);
@@ -211,21 +210,21 @@ async function loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapter
                 remarkDiv.className = 'submission-details remarks-container hidden';
                 
                 const remarkH5 = document.createElement('h5');
-                remarkH5.textContent = 'AI Evaluation & Remarks:';
+                remarkH5.textContent = 'Evaluation & Remarks:';
                 
                 const remarkPre = document.createElement('pre');
 
-                // ✅✅✅ THIS IS THE FIX ✅✅✅
-                // This block now has a final 'else' to catch all other cases
+                // ✅ YEH LOGIC "BLANK" SCREEN KO FIX KAREGA
                 if (sub.ai_evaluation_details && sub.ai_evaluation_details.trim() !== '') {
                     remarkPre.textContent = sub.ai_evaluation_details;
                 } else if (sub.ai_assigned_marks === 'Error') {
-                    remarkPre.textContent = `AI evaluation failed.\nDetails: ${sub.ai_evaluation_details || 'No error details provided.'}`;
+                    remarkPre.textContent = `Evaluation failed.\nDetails: ${sub.ai_evaluation_details || 'No error details provided.'}`;
+                    remarkPre.style.color = 'red';
                 } else if (hasSubmitted && (!sub.ai_evaluation_details || sub.ai_evaluation_details.trim() === '')) {
-                     remarkPre.textContent = 'AI evaluation is still in progress. Please check back in a few minutes...';
+                     remarkPre.textContent = 'Evaluation is in progress... (n8n is working). Please check back in a few minutes.';
+                     remarkPre.style.color = 'blue';
                 } else {
-                    // This catch-all fixes the blank space for "0"
-                    remarkPre.textContent = 'AI evaluation has not run or is still processing.';
+                    remarkPre.textContent = 'No evaluation available in database (data is null or empty).';
                 }
                 
                 remarkDiv.appendChild(remarkH5);
@@ -233,7 +232,6 @@ async function loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapter
                 listItem.appendChild(remarkDiv);
             }
 
-            // Add the fully built item to the list
             list.appendChild(listItem);
         });
 
@@ -242,6 +240,7 @@ async function loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapter
         totalCountEl.textContent = submissions.length;
 
     } catch (error) {
+        // Yahan "Server error retrieving submissions" dikhega
         list.innerHTML = `<p style="color: red; font-weight: bold;">Error: ${error.message}</p>`;
     }
 }

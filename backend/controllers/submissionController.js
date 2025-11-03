@@ -1,248 +1,11 @@
 // backend/controllers/submissionController.js
-import { GoogleGenAI } from '@google/genai';
 import pkg from 'pg';
-import nodemailer from 'nodemailer';
 const { Pool } = pkg;
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
-
-// --- Nodemailer Setup ---
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS, // Your App Password
-    },
-});
-
-// --- Main Webhook Handler ---
-export const handleGoogleFormWebhook = async (req, res) => {
-    // Check if body exists and has expected properties
-    if (!req.body || typeof req.body !== 'object') {
-        console.error('Webhook received invalid or empty body');
-        return res.status(400).send('Invalid request body.');
-    }
-
-    const { studentEmail, generatedWorksheetId, answers } = req.body;
-
-    // Validate essential fields
-    if (!studentEmail || typeof studentEmail !== 'string') {
-        console.error('Webhook received missing or invalid studentEmail:', studentEmail);
-        return res.status(400).send('Missing or invalid studentEmail.');
-    }
-     if (!generatedWorksheetId || isNaN(parseInt(generatedWorksheetId))) {
-        console.error('Webhook received missing or invalid generatedWorksheetId:', generatedWorksheetId);
-        return res.status(400).send('Missing or invalid generatedWorksheetId.');
-    }
-    // Check if answers.full_text is a string
-    if (!answers || typeof answers !== 'object' || typeof answers.full_text !== 'string') { 
-         console.error('Webhook received missing or invalid answers structure:', answers);
-        return res.status(400).send('Missing or invalid answers structure (expected object with full_text string).');
-    }
-
-
-    try {
-        // 1. Find the student by email
-        const studentRes = await pool.query('SELECT id FROM students WHERE email = $1', [studentEmail]);
-        if (studentRes.rows.length === 0) {
-            console.error(`Submission from unknown student email: ${studentEmail}`);
-            return res.status(404).send('Student not found.');
-        }
-        const studentId = studentRes.rows[0].id;
-
-        // 2. Save the initial submission (or update if re-submitting)
-        const answersText = answers.full_text || ''; // Use the text from the form
-
-        const submissionRes = await pool.query(
-            `INSERT INTO worksheet_submissions (student_id, generated_worksheet_id, student_answers_raw)
-             VALUES ($1, $2, $3)
-             ON CONFLICT (student_id, generated_worksheet_id)
-             DO UPDATE SET
-                student_answers_raw = EXCLUDED.student_answers_raw,
-                submitted_at = NOW(),
-                is_likely_ai_generated = NULL, 
-                ai_detection_details = NULL,
-                ai_evaluation_details = NULL,
-                ai_assigned_marks = NULL,
-                feedback_sent_to_student_at = NULL
-             RETURNING id`,
-            [studentId, parseInt(generatedWorksheetId), answersText] 
-        );
-        const submissionId = submissionRes.rows[0].id;
-        console.log(`Submission ${submissionId} received/updated for student ${studentId}, worksheet ${generatedWorksheetId}.`);
-
-        // 3. Trigger the full processing asynchronously
-        processSubmission(submissionId); // Fire-and-forget
-
-        // 4. Immediately tell Google "we got it"
-        console.log(`Webhook processed successfully for submission ${submissionId}.`);
-        res.status(200).send('Submission received and is being processed.');
-
-    } catch (error) {
-        console.error(`Error in webhook handler for worksheet ${generatedWorksheetId}, student ${studentEmail}:`, error);
-        res.status(500).send('Internal server error processing submission.');
-    }
-};
-
-// --- Asynchronous Processing Function ---
-async function processSubmission(submissionId) {
-    console.log(`Starting background processing for submission ${submissionId}...`);
-    try {
-        const submissionDataRes = await pool.query('SELECT student_answers_raw FROM worksheet_submissions WHERE id = $1', [submissionId]);
-         if (submissionDataRes.rows.length === 0) {
-            console.error(`processSubmission: Submission ${submissionId} not found.`);
-            return;
-        }
-        const answersText = submissionDataRes.rows[0].student_answers_raw;
-
-        // 1. AI Content Detection
-        let aiDetectionResult = { is_likely_ai_generated: null, details: 'Detection not run or failed.' };
-        if (ai && answersText && answersText.length > 50) { 
-             try {
-                console.log(`Running AI detection for submission ${submissionId}...`);
-                const detectionPrompt = `Analyze the following text and determine the likelihood that it was generated by an AI. Provide ONLY a JSON object with keys "is_likely_ai_generated" (boolean), "confidence_score" (float 0-1), "reasoning" (string).\n\nText:\n${answersText}`;
-                const detectionResponse = await ai.models.generateContent({ model: "gemini-2.5-flash", contents: detectionPrompt });
-                let rawJsonResponse = detectionResponse.text.trim().replace(/```json\n?|\n?```/g, '');
-                const parsedResponse = JSON.parse(rawJsonResponse);
-                aiDetectionResult = {
-                    is_likely_ai_generated: parsedResponse.is_likely_ai_generated ?? null,
-                    details: `Confidence: ${parsedResponse.confidence_score?.toFixed(2)}. Reasoning: ${parsedResponse.reasoning}`
-                };
-                 console.log(`AI detection complete for submission ${submissionId}. Result: ${JSON.stringify(aiDetectionResult)}`);
-            } catch (e) {
-                console.error(`AI detection parsing failed for submission ${submissionId}:`, e);
-                 aiDetectionResult.details = `Detection failed: ${e.message}`;
-            }
-        } else {
-             console.log(`Skipping AI detection for submission ${submissionId} (AI not configured or text too short).`);
-             aiDetectionResult.details = 'Skipped: AI not configured or text too short.';
-        }
-
-
-        await pool.query(
-            'UPDATE worksheet_submissions SET is_likely_ai_generated = $1, ai_detection_details = $2 WHERE id = $3',
-            [aiDetectionResult.is_likely_ai_generated, aiDetectionResult.details, submissionId]
-        );
-
-        // 2. AI Evaluation
-        const evalData = await getEvaluationContext(submissionId);
-        if (!evalData) {
-             console.error(`Could not get evaluation context for submission ${submissionId}. Aborting evaluation.`);
-             return;
-        }
-
-        console.log(`Running AI evaluation for submission ${submissionId}...`);
-        const evaluationPrompt = createEvaluationPrompt(evalData, aiDetectionResult);
-        const evalResponse = await ai.models.generateContent({ model: "gemini-2.5-flash", contents: evaluationPrompt });
-        const evaluationDetails = evalResponse.text.trim();
-
-        let assignedMarks = "Needs Review"; 
-        const scoreMatch = evaluationDetails.match(/Total Score:\s*([\d\.]+\s*\/\s*\d+)/i);
-        if (scoreMatch) {
-             assignedMarks = scoreMatch[1].replace(/\s+/g, ''); 
-        } else {
-             console.warn(`Could not parse score from evaluation for submission ${submissionId}.`);
-        }
-        console.log(`AI evaluation complete for submission ${submissionId}. Marks: ${assignedMarks}`);
-
-        await pool.query(
-            'UPDATE worksheet_submissions SET ai_evaluation_details = $1, ai_assigned_marks = $2 WHERE id = $3',
-            [evaluationDetails, assignedMarks, submissionId]
-        );
-
-        // 3. Send Feedback Email
-        console.log(`Triggering feedback email for submission ${submissionId}...`);
-        await sendFeedbackEmail(submissionId);
-
-    } catch (error) {
-        console.error(`Background processing failed for submission ${submissionId}:`, error);
-        try {
-            await pool.query(
-                `UPDATE worksheet_submissions SET ai_evaluation_details = $1, ai_assigned_marks = 'Error' WHERE id = $2`,
-                [`Evaluation failed: ${error.message}`, submissionId]
-            );
-        } catch (dbError) {
-             console.error(`Failed to update submission ${submissionId} status to Error:`, dbError);
-        }
-    }
-}
-
-// --- Helper Functions ---
-
-async function getEvaluationContext(submissionId) {
-    try {
-        const result = await pool.query(`
-            SELECT ws.student_answers_raw, gw.worksheet_content, gw.answer_key_content, ch.chapter_name, sub.subject_name, s.email as student_email
-            FROM worksheet_submissions ws
-            JOIN generated_worksheets gw ON ws.generated_worksheet_id = gw.id
-            JOIN chapters ch ON gw.chapter_id = ch.id
-            JOIN subjects sub ON ch.subject_id = sub.id
-            JOIN students s ON ws.student_id = s.id
-            WHERE ws.id = $1
-        `, [submissionId]);
-         if (result.rows.length === 0) return null;
-        return result.rows[0];
-    } catch(error) {
-        console.error(`Error fetching evaluation context for submission ${submissionId}:`, error);
-        return null;
-    }
-}
-
-function createEvaluationPrompt(data, detectionResult) {
-    let aiCheckInfo = `AI Content Check: ${detectionResult.details || 'Not performed or failed.'}`;
-    const subjectName = data.subject_name || 'the subject';
-    const chapterName = data.chapter_name || 'this chapter';
-    const worksheetContent = data.worksheet_content || '[Worksheet content not found]';
-    const answerKeyContent = data.answer_key_content || '[Answer key not found]';
-    const studentAnswers = data.student_answers_raw || '[Student answers not found]';
-
-    return `
-        Act as a helpful ${subjectName} teacher evaluating a student's worksheet submission for the chapter "${chapterName}".
-        Original Questions: ${worksheetContent}
-        Correct Answer Key: ${answerKeyContent}
-        Student's Submitted Answers: ${studentAnswers}
-        ${aiCheckInfo}
-        Please evaluate the student's answers based on the answer key. For each question:
-        1. Briefly state if the answer is correct, partially correct, or incorrect.
-        2. Provide concise feedback explaining why.
-        Finally, provide a "Total Score" (e.g., "Total Score: 8/10") and "Overall Remarks" summarizing performance. If the content check indicated AI generation, add a brief, non-accusatory note.
-        Format your response clearly. Start with "Total Score:", then "Overall Remarks:", followed by the detailed question-by-question evaluation.
-    `;
-}
-
-async function sendFeedbackEmail(submissionId) {
-    const data = await getEvaluationContext(submissionId);
-    if (!data || !data.student_email) {
-         console.error(`Cannot send feedback for submission ${submissionId}: Missing data or student email.`);
-         return;
-    }
-    const evalResult = await pool.query('SELECT ai_assigned_marks, ai_evaluation_details FROM worksheet_submissions WHERE id = $1', [submissionId]);
-    if (evalResult.rows.length === 0 || !evalResult.rows[0].ai_evaluation_details) {
-         console.error(`Cannot send feedback for submission ${submissionId}: Evaluation details not found.`);
-         return;
-    }
-    const { ai_assigned_marks, ai_evaluation_details } = evalResult.rows[0];
-
-    const mailOptions = {
-        from: `"Sahayak App" <${process.env.EMAIL_USER}>`,
-        to: data.student_email,
-        subject: `Feedback for your worksheet on "${data.chapter_name}"`,
-        text: `Hello,\n\nHere is the feedback for your recent submission.\n\nScore: ${ai_assigned_marks || 'N/A'}\n\n--- Detailed Feedback ---\n${ai_evaluation_details}\n\nRegards,\nSahayak Platform`,
-        html: `<p>Hello,</p><p>Here is the feedback for your recent submission.</p><p><b>Score: ${ai_assigned_marks || 'N/A'}</b></p><hr><p><b>Detailed Feedback:</b></p><pre style="white-space: pre-wrap; word-wrap: break-word; font-family: sans-serif;">${ai_evaluation_details}</pre><hr><p>Regards,<br>Sahayak Platform</p>`,
-    };
-
-    try {
-        await transporter.sendMail(mailOptions);
-        await pool.query('UPDATE worksheet_submissions SET feedback_sent_to_student_at = NOW() WHERE id = $1', [submissionId]);
-        console.log(`Feedback email sent successfully for submission ${submissionId} to ${data.student_email}.`);
-    } catch (error) {
-        console.error(`Failed to send feedback email for submission ${submissionId} to ${data.student_email}:`, error);
-    }
-}
-
 
 // --- Teacher-Facing API Function ---
+// Yeh function database se woh data fetch karta hai jo n8n ne daala hai.
 export const getSubmissionsForChapter = async (req, res) => {
     const { teacherAssignmentId, chapterId } = req.params;
     const teacherId = req.user.id;
@@ -253,14 +16,14 @@ export const getSubmissionsForChapter = async (req, res) => {
     }
 
     try {
-        // 1. Security check: Does this teacher own this assignment?
+        // 1. Security check: Teacher assignment ka maalik hai?
         const ownerCheck = await pool.query('SELECT section_id FROM teacher_class_assignments WHERE id = $1 AND teacher_id = $2', [teacherAssignmentId, teacherId]);
         if (ownerCheck.rows.length === 0) {
             return res.status(403).json({ message: 'Access denied to this assignment.' });
         }
         const sectionId = ownerCheck.rows[0].section_id;
 
-        // 2. Find the specific generated_worksheet_id for this assignment/chapter
+        // 2. Us generated_worksheet ka ID dhoondho
          const worksheetCheck = await pool.query('SELECT id FROM generated_worksheets WHERE teacher_assignment_id = $1 AND chapter_id = $2', [teacherAssignmentId, chapterId]);
          let generatedWorksheetId = null;
          if (worksheetCheck.rows.length > 0) {
@@ -269,7 +32,8 @@ export const getSubmissionsForChapter = async (req, res) => {
              console.log(`No worksheet found for assignment ${teacherAssignmentId}, chapter ${chapterId}. Listing students only.`);
          }
 
-        // 3. Fetch all students in the section AND their submission details
+        // 3. Sabhi students aur unke submissions fetch karo
+        // ✅ Yeh query ab correct hai aur n8n ka data fetch kar rahi hai
         const query = `
             SELECT
                 s.id as student_id,
@@ -279,8 +43,8 @@ export const getSubmissionsForChapter = async (req, res) => {
                 ws.submitted_at,
                 ws.ai_assigned_marks,
                 ws.is_likely_ai_generated,
-                ws.student_answers_raw,      -- <<< This line is correct
-                ws.ai_evaluation_details     -- <<< This line is correct
+                ws.student_answers_raw,      -- <<< Yeh column fetch ho raha hai
+                ws.ai_evaluation_details     -- <<< Yeh column fetch ho raha hai
             FROM students s
             JOIN student_class_enrollments sce ON s.id = sce.student_id
             LEFT JOIN worksheet_submissions ws ON s.id = ws.student_id AND ws.generated_worksheet_id = $2 
@@ -290,11 +54,12 @@ export const getSubmissionsForChapter = async (req, res) => {
         
         const { rows } = await pool.query(query, [sectionId, generatedWorksheetId]);
         
-        // 4. Return the list of students
+        // 4. Data frontend ko bhej do
         res.json(rows);
 
     } catch (error) {
         console.error(`Error getting submissions for chapter ${chapterId}, assignment ${teacherAssignmentId}:`, error);
+        // Yahan error aane par "Server error" message frontend par jayega
         res.status(500).json({ message: 'Server error retrieving submissions' });
     }
 };
