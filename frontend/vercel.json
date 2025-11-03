@@ -1,0 +1,24 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://sahayak-app.onrender.com/api/:path*"
+    },
+    {
+      "source": "/style.css",
+      "destination": "/public/style.css"
+    },
+    {
+      "source": "/scripts/:path*",
+      "destination": "/src/scripts/:path*"
+    },
+    {
+      "source": "/src/components/:path*",
+      "destination": "/src/components/:path*"
+    },
+    {
+      "source": "/pages/:path*",
+      "destination": "/src/pages/:path*"
+    }
+  ]
+}
