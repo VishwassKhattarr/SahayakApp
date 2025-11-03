@@ -14,11 +14,19 @@
 
       <section class="admin-section">
         <div class="form-group">
-          <label for="class-filter">Filter by Class:</label>
+          <label for="class-filter">Class:</label>
           <select id="class-filter">
             <option value="">All Classes</option>
           </select>
+
+          <label for="section-filter">Section:</label>
+          <select id="section-filter" disabled>
+            <option value="">All Sections</option>
+          </select>
+
           <button id="filter-btn" class="btn">Filter</button>
+          <!-- ✅ New button -->
+          <button id="download-class-reports-btn" class="btn btn-secondary">📦 Download Class Report ZIP</button>
         </div>
 
         <div id="students-container" class="data-card">

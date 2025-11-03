@@ -38,6 +38,9 @@ app.use("/api/reports", reportRoutes);
 
 // Teacher upload routes (under /api for consistency)
 app.use('/api', adminRoutes);
+// app.use('/api', adminRoutes);        // existing
+app.use('/api/admin', adminRoutes);  // alias to match frontend
+
 app.use("/api/reports", reportRoutes);
 
 // Simple root route
