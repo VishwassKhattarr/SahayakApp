@@ -1,30 +1,32 @@
 {
-    
-
-    "routes": [
+  "rewrites": [
     {
-      "src": "/api/:path*",
-      "dest": "https://sahayak-app.onrender.com/api/:path*"
+        "source": "/(.*)",
+        "destination": "/index.html"
+          },
+    {
+      "source": "/api/:path*",
+      "destination": "https://sahayak-app.onrender.com/api/:path*"
     },
     {
-      "src": "/style.css",
-      "dest": "/public/style.css"
+      "source": "/style.css",
+      "destination": "/public/style.css"
     },
     {
-      "src": "/scripts/:path*",
-      "dest": "/src/scripts/:path*"
+      "source": "/scripts/:path*",
+      "destination": "/src/scripts/:path*"
     },
     {
-      "src": "/src/components/:path*",
-      "dest": "/src/components/:path*"
+      "source": "/src/components/:path*",
+      "destination": "/src/components/:path*"
     },
     {
-      "src": "/pages/:path*",
-      "dest": "/src/pages/:path*"
+      "source": "/pages/:path*",
+      "destination": "/src/pages/:path*"
     },
     {
-      "src": "/components/:path*",
-      "dest": "/src/components/:path*"
+      "source": "/components/:path*",
+      "destination": "/src/components/:path*"
     }
   ]
 }
