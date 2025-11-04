@@ -51,20 +51,15 @@ export const teacherLogin = async (req, res) => {
 };
 
 export const getAllTeachers = async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT id, name, email, status, to_char(created_at, 'YYYY-MM-DD') AS joined_on
-      FROM teachers
-      ORDER BY id ASC;
-    `);
-    res.json({ success: true, teachers: result.rows });
-  } catch (error) {
-    console.error('Error fetching teachers:', error);
-    res.status(500).json({ success: false, message: 'Server error fetching teachers' });
-  }
-};
-
-export const toggleTeacherStatus = async (req, res) => {
+  try {
+    const query = 'SELECT id, name, email, status, to_char(created_at, \'YYYY-MM-DD\') AS joined_on FROM teachers ORDER BY id ASC';
+    const result = await pool.query(query);
+    res.json({ success: true, teachers: result.rows });
+  } catch (error) {
+    console.error('Error fetching teachers:', error);
+    res.status(500).json({ success: false, message: 'Server error fetching teachers' });
+  }
+};export const toggleTeacherStatus = async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -124,7 +119,8 @@ export const getTeacherClasses = async (req, res) => {
       AND tca.academic_year_id = (
         SELECT id FROM academic_years WHERE is_current = true
       )
-      ORDER BY cls.class_name, sec.section_name`;    console.log('Executing query with teacher ID:', teacherId);
+      ORDER BY cls.class_name, sec.section_name`;
+    console.log('Executing query with teacher ID:', teacherId);
     const result = await pool.query(query, [teacherId]);
     console.log('Query result:', result.rows);
 
@@ -149,7 +145,9 @@ export const assignTeacher = async (req, res) => {
     // Validation
     if (!teacher_id || !class_id || !section_id || !subject_id || !academic_year_id) {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
-    }    // Insert into teacher_class_assignments table
+    }
+    
+    // Insert into teacher_class_assignments table
     const result = await pool.query(
       'INSERT INTO teacher_class_assignments (teacher_id, class_id, section_id, subject_id, academic_year_id, assigned_on) VALUES ($1, $2, $3, $4, $5, CURRENT_DATE) ON CONFLICT DO NOTHING RETURNING id',
       [teacher_id, class_id, section_id, subject_id, academic_year_id]

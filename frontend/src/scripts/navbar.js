@@ -1,5 +1,5 @@
 // Loads the navbar partial and injects it into the placeholder
-fetch('../components/navbar.html')
+fetch('/src/components/navbar.html')
   .then(res => res.text())
   .then(data => {
     document.getElementById('navbar-placeholder').innerHTML = data;
