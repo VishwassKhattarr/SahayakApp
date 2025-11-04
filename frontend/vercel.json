@@ -13,7 +13,7 @@
       "destination": "/src/scripts/:path*"
     },
     {
-      "source": "/src/components/:path*",
+      "source": "/components/:path*",
       "destination": "/src/components/:path*"
     },
     {
