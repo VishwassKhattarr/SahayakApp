@@ -1,5 +1,5 @@
 // Loads the admin navbar partial and injects it into the placeholder
-fetch('/src/components/navbar-admin.html')
+fetch('../components/navbar-admin.html')
   .then(res => res.text())
   .then(data => {
     document.getElementById('navbar-placeholder').innerHTML = data;
