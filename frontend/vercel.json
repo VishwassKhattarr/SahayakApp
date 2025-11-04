@@ -1,5 +1,7 @@
 {
-  "rewrites": [
+    "Version": 2,
+
+    "routes": [
     {
       "source": "/api/:path*",
       "destination": "https://sahayak-app.onrender.com/api/:path*"
