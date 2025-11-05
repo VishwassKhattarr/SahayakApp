@@ -39,7 +39,10 @@ export const getTrackers = async (req, res) => {
             JOIN classes cls ON tca.class_id = cls.id
             JOIN sections sec ON tca.section_id = sec.id
             JOIN subjects sub ON tca.subject_id = sub.id
-            WHERE tca.teacher_id = $1;
+            WHERE tca.teacher_id = $1
+            AND tca.academic_year_id = (
+                SELECT MAX(id) FROM academic_years 
+            );
         `;
         const { rows } = await pool.query(query, [teacherId]);
 // ... rest of function
