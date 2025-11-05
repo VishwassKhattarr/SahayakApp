@@ -35,7 +35,12 @@
             <div class="card">
                 <h2>Attendance</h2>
                 <p>Mark and view daily student attendance.</p>
-                <a href="attendance.html" class="btn primary-btn">Mark Attendance</a>
+                <div class="form-group">
+                    <select id="attendance-class-select" class="form-control">
+                        <option value="">Select Class</option>
+                    </select>
+                </div>
+                <button onclick="redirectToAttendance()" class="btn primary-btn">Mark Attendance</button>
             </div>
 
             <div class="card">

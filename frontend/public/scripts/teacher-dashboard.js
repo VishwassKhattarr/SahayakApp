@@ -2,7 +2,50 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     loadSyllabusTrackers();
+    loadTeacherClasses();
 });
+
+async function loadTeacherClasses() {
+    const classSelect = document.getElementById('attendance-class-select');
+    const token = localStorage.getItem('token');
+
+    try {
+        const response = await fetch('/api/teacher/classes', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch classes');
+
+        const classes = await response.json();
+
+        if (classes.length === 0) {
+            classSelect.innerHTML = '<option value="">No classes assigned</option>';
+            return;
+        }
+
+        classSelect.innerHTML = `
+            <option value="">Select Class</option>
+            ${classes.map(cls => `
+                <option value="${cls.teacher_assignment_id}">${cls.class_name} ${cls.section_name} - ${cls.subject_name}</option>
+            `).join('')}
+        `;
+    } catch (error) {
+        console.error('Error loading classes:', error);
+        classSelect.innerHTML = '<option value="">Error loading classes</option>';
+    }
+}
+
+function redirectToAttendance() {
+    const classSelect = document.getElementById('attendance-class-select');
+    const selectedClass = classSelect.value;
+
+    if (!selectedClass) {
+        alert('Please select a class first');
+        return;
+    }
+
+    window.location.href = `/pages/attendance.html?classId=${selectedClass}`;
+}
 
 async function loadSyllabusTrackers() {
     const syllabusContainer = document.getElementById('tracker-list-container');
