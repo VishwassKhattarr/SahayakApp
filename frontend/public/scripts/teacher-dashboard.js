@@ -3,6 +3,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     loadSyllabusTrackers();
     loadTeacherClasses();
+
+    // Add click handler for attendance button
+    const attendanceBtn = document.getElementById('mark-attendance-btn');
+    if (attendanceBtn) {
+        attendanceBtn.addEventListener('click', redirectToAttendance);
+    }
 });
 
 async function loadTeacherClasses() {
