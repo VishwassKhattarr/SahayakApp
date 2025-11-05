@@ -58,7 +58,7 @@ export const getTrackerDetails = async (req, res) => {
 
     try {
         const assignmentCheck = await pool.query(
-            `SELECT tca.subject_id, tca.section_id, cls.class_name, sec.section_name, sub.subject_name
+            `SELECT tca.class_subject_id, tca.section_id, cls.class_name, sec.section_name, sub.subject_name
              FROM teacher_class_assignments tca
              JOIN classes cls ON tca.class_id = cls.id
              JOIN sections sec ON tca.section_id = sec.id
