@@ -21,57 +21,14 @@ const GOOGLE_FORM_BASE_URL = process.env.GOOGLE_FORM_BASE_URL;
 const EMAIL_FIELD_ID = process.env.GOOGLE_FORM_EMAIL_FIELD_ID;
 const WORKSHEET_ID_FIELD_ID = process.env.GOOGLE_FORM_WORKSHEET_ID_FIELD_ID;
 
-// OLD getTrackers function
 export const getTrackers = async (req, res) => {
     const teacherId = req.user.id; // From verifyToken middleware
 
     try {
-        const query = `
-            SELECT
-                tca.id as teacher_assignment_id,
-                cls.class_name,
-                sec.section_name,
-                sub.subject_name,
-                tca.subject_id,
-                (SELECT COUNT(*) FROM completion_status cs WHERE cs.teacher_assignment_id = tca.id AND cs.is_completed = true) as chapters_completed,
-                (SELECT COUNT(*) FROM chapters ch WHERE ch.subject_id = tca.subject_id) as total_chapters
-            FROM teacher_class_assignments tca
-            JOIN classes cls ON tca.class_id = cls.id
-            JOIN sections sec ON tca.section_id = sec.id
-            JOIN subjects sub ON tca.subject_id = sub.id
-            WHERE tca.teacher_id = $1
-            AND tca.academic_year_id = (
-                SELECT MAX(id) FROM academic_years 
-            );
-        `;
+        const query = 'SELECT tca.id as teacher_assignment_id, cls.class_name, sec.section_name, sub.subject_name, tca.subject_id, (SELECT COUNT(*) FROM completion_status cs WHERE cs.teacher_assignment_id = tca.id AND cs.is_completed = true) as chapters_completed, (SELECT COUNT(*) FROM chapters ch WHERE ch.subject_id = tca.subject_id) as total_chapters FROM teacher_class_assignments tca JOIN classes cls ON tca.class_id = cls.id JOIN sections sec ON tca.section_id = sec.id JOIN subjects sub ON tca.subject_id = sub.id WHERE tca.teacher_id = $1 AND tca.academic_year_id = (SELECT id FROM academic_years WHERE is_current = true)';
+        
         const { rows } = await pool.query(query, [teacherId]);
-// ... rest of function
-
-/**
- * Get all syllabus trackers (teacher assignments) for the logged-in teacher.
- */
-// export const getTrackers = async (req, res) => {
-//     const teacherId = req.user.id; // From verifyToken middleware
-
-//     try {
-//         const query = `
-//             SELECT
-//                 tca.id as teacher_assignment_id,
-//                 cls.class_name,
-//                 sec.section_name,
-//                 sub.subject_name,
-//                 tca.subject_id,
-//                 (SELECT COUNT(*) FROM completion_status cs WHERE cs.teacher_assignment_id = tca.id AND cs.is_completed = true) as chapters_completed,
-//                 (SELECT COUNT(*) FROM chapters ch WHERE ch.subject_id = tca.subject_id) as total_chapters
-//             FROM teacher_class_assignments tca
-//             JOIN classes cls ON tca.class_id = cls.id
-//             JOIN sections sec ON tca.section_id = sec.id
-//             JOIN subjects sub ON tca.subject_id = sub.id
-//             WHERE tca.teacher_id = $1;
-//         `;
-//         const { rows } = await pool.query(query, [teacherId]);
-
-
+        
         const trackers = rows.map(row => ({
             ...row,
             full_class_name: `${row.class_name}-${row.section_name}`,
