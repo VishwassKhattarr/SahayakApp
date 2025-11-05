@@ -25,7 +25,7 @@ export const getTrackers = async (req, res) => {
     const teacherId = req.user.id; // From verifyToken middleware
 
     try {
-        const query = 'SELECT tca.id as teacher_assignment_id, cls.class_name, sec.section_name, sub.subject_name, tca.subject_id, (   SELECT     COUNT(*)   FROM     completion_status cs   WHERE     cs.teacher_assignment_id = tca.id     AND cs.is_completed = true  ) as chapters_completed,  (    SELECT      COUNT(*)    FROM      chapters ch    WHERE      ch.subject_id = tca.subject_id  ) as total_chapters FROM  teacher_class_assignments tca  JOIN classes cls ON tca.class_id = cls.id  JOIN sections sec ON tca.section_id = sec.id  JOIN subjects sub ON tca.subject_id = sub.id WHERE  tca.teacher_id = $1  AND tca.academic_year_id = (    SELECT      MAX(id)    FROM      academic_years  );';
+        const query = 'SELECT tca.id as teacher_assignment_id, cls.class_name, sec.section_name, sub.subject_name, tca.class_subject_id, (   SELECT     COUNT(*)   FROM     completion_status cs   WHERE     cs.teacher_assignment_id = tca.id     AND cs.is_completed = true  ) as chapters_completed,  (    SELECT      COUNT(*)    FROM      chapters ch    WHERE      ch.class_subject_id = tca.class_subject_id  ) as total_chapters FROM  teacher_class_assignments tca  JOIN classes cls ON tca.class_id = cls.id  JOIN sections sec ON tca.section_id = sec.id  JOIN subjects sub ON tca.class_subject_id = sub.id WHERE  tca.teacher_id = $1  AND tca.academic_year_id = (    SELECT      MAX(id)    FROM      academic_years  );';
         
         const { rows } = await pool.query(query, [teacherId]);
         
@@ -62,7 +62,7 @@ export const getTrackerDetails = async (req, res) => {
              FROM teacher_class_assignments tca
              JOIN classes cls ON tca.class_id = cls.id
              JOIN sections sec ON tca.section_id = sec.id
-             JOIN subjects sub ON tca.subject_id = sub.id
+             JOIN subjects sub ON tca.class_subject_id = sub.id
              WHERE tca.id = $1 AND tca.teacher_id = $2`,
             [teacherAssignmentId, teacherId]
         );
@@ -71,7 +71,7 @@ export const getTrackerDetails = async (req, res) => {
             return res.status(403).json({ message: 'Access denied' });
         }
 
-        const { subject_id, class_name, section_name, subject_name } = assignmentCheck.rows[0];
+        const { class_subject_id, class_name, section_name, subject_name } = assignmentCheck.rows[0];
 
         const query = `
             SELECT
@@ -81,10 +81,10 @@ export const getTrackerDetails = async (req, res) => {
                 COALESCE(cs.is_completed, false) as is_completed
             FROM chapters ch
             LEFT JOIN completion_status cs ON ch.id = cs.chapter_id AND cs.teacher_assignment_id = $1
-            WHERE ch.subject_id = $2
+            WHERE ch.class_subject_id = $2
             ORDER BY ch.chapter_order;
         `;
-        const { rows } = await pool.query(query, [teacherAssignmentId, subject_id]);
+        const { rows } = await pool.query(query, [teacherAssignmentId, class_subject_id]);
 
         res.json({
             className: `${class_name}-${section_name}`,
@@ -117,7 +117,7 @@ export const markChapterComplete = async (req, res) => {
              FROM teacher_class_assignments tca
              JOIN classes cls ON tca.class_id = cls.id
              JOIN sections sec ON tca.section_id = sec.id
-             JOIN subjects sub ON tca.subject_id = sub.id
+             JOIN subjects sub ON tca.class_subject_id = sub.id
              WHERE tca.id = $1 AND tca.teacher_id = $2`,
             [teacherAssignmentId, teacherId]
         );
