@@ -87,7 +87,7 @@ async function loadStudents(className = '', sectionName = '') {
     tableBody.innerHTML = '';
 
     if (!data.success || data.students.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No students found.</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center;">No students found.</td></tr>`;
       return;
     }
 
@@ -101,6 +101,7 @@ async function loadStudents(className = '', sectionName = '') {
         <td>${st.class_name || '-'}</td>
         <td>${st.section_name || '-'}</td>
         <td>${st.parent_contact || '-'}</td>
+        <td>${st.parent_email || '-'}</td>
         <td>
           <button class="btn btn-report" data-id="${st.id}">📄 Report</button>
         </td>
@@ -116,7 +117,7 @@ async function loadStudents(className = '', sectionName = '') {
     });
   } catch (err) {
     console.error('Error loading students:', err);
-    tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Error fetching students.</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center;">Error fetching students.</td></tr>`;
   }
 }
 

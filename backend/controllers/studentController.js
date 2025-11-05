@@ -10,7 +10,7 @@ export const getAllStudents = async (req, res) => {
     let query = `
       SELECT 
         s.id, s.name, s.email, s.roll_number,
-        s.parent_contact, s.parent_name,
+        s.parent_contact, s.parent_name, s.parent_email,
         c.class_name, sec.section_name,
         ay.year_name AS academic_year
       FROM students s
