@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadSyllabusTrackers() {
     const syllabusContainer = document.getElementById('tracker-list-container');
-    // ✅ Get the new container
     const submissionContainer = document.getElementById('submission-review-list-container');
     const token = localStorage.getItem('token');
 
@@ -31,14 +30,16 @@ async function loadSyllabusTrackers() {
             return;
         }
 
-        syllabusContainer.innerHTML = ''; // Clear 'loading'
-        submissionContainer.innerHTML = ''; // Clear 'loading'
-        
+        // --- ✅ REFINEMENT START ---
+        // 1. Create empty arrays to hold the HTML strings
+        const syllabusHTML = [];
+        const submissionHTML = [];
+
         trackers.forEach(tracker => {
             const fullClassName = `${tracker.full_class_name} - ${tracker.subject_name}`;
 
-            // ✅ Populate Syllabus Tracker List
-            syllabusContainer.innerHTML += `
+            // 2. Push HTML strings into the arrays (this is very fast)
+            syllabusHTML.push(`
                 <a href="/pages/syllabus-detail.html?id=${tracker.teacher_assignment_id}" class="tracker-link">
                     <div class="tracker-card">
                         <div class="tracker-header">
@@ -52,11 +53,9 @@ async function loadSyllabusTrackers() {
                         </div>
                     </div>
                 </a>
-            `;
+            `);
 
-            // ✅ Populate Submission Review List
-            // This links to the new page we will create
-            submissionContainer.innerHTML += `
+            submissionHTML.push(`
                 <a href="/pages/worksheet-submissions.html?id=${tracker.teacher_assignment_id}&name=${encodeURIComponent(fullClassName)}" class="tracker-link">
                     <div class="tracker-card">
                         <div class="tracker-header">
@@ -65,8 +64,13 @@ async function loadSyllabusTrackers() {
                         </div>
                     </div>
                 </a>
-            `;
+            `);
         });
+
+        // 3. Set the innerHTML *only once* after the loop is finished
+        syllabusContainer.innerHTML = syllabusHTML.join('');
+        submissionContainer.innerHTML = submissionHTML.join('');
+        // --- ✅ REFINEMENT END ---
 
     } catch (error) {
         console.error('Failed to load trackers:', error);
