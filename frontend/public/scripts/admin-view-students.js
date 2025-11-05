@@ -126,27 +126,67 @@ async function loadStudents(className = '', sectionName = '') {
   // Generate a single student's report PDF
   async function generateReport(studentId) {
     try {
-      const response = await fetch(`/api/reports/generate/${studentId}`, { method: 'GET' });
-      if (!response.ok) {
-        alert('❌ Failed to generate report.');
+      // Send request to backend to email the report to parent (uses Resend on server)
+      const response = await fetch(`/api/reports/send/${studentId}`, { method: 'POST' });
+
+      const contentType = response.headers.get('content-type') || '';
+
+      // If server returned PDF (Resend not configured fallback), download it directly
+      if (contentType.includes('application/pdf')) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const cd = response.headers.get('content-disposition') || '';
+        let filename = `Report_${studentId}.pdf`;
+        const match = cd.match(/filename=\"?([^\";]+)\"?/);
+        if (match && match[1]) filename = match[1];
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        alert('✅ Report downloaded (server returned PDF).');
         return;
       }
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // Otherwise expect JSON (Resend was used)
+      const data = await response.json();
+      if (!response.ok) {
+        console.error('Error sending report:', data);
+        alert('❌ Failed to send report email.');
+        return;
+      }
+      alert(`✅ Report emailed to parent (${data.message || 'sent'})`);
 
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Report_Student_${studentId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      // Also trigger download of the same PDF for local copy using the existing generate endpoint
+      try {
+        const genRes = await fetch(`/api/reports/generate/${studentId}`);
+        if (genRes.ok) {
+          const blob = await genRes.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          // Try to get filename from content-disposition header
+          const cd = genRes.headers.get('content-disposition') || '';
+          let filename = `Report_${studentId}.pdf`;
+          const match = cd.match(/filename=\"?([^\";]+)\"?/);
+          if (match && match[1]) filename = match[1];
 
-      alert('✅ Report downloaded successfully!');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        } else {
+          console.warn('Could not download report, server returned', genRes.status);
+        }
+      } catch (err) {
+        console.error('Error downloading report after send:', err);
+      }
     } catch (err) {
-      console.error('Error generating report:', err);
-      alert('⚠️ Error generating report');
+      console.error('Error sending report:', err);
+      alert('⚠️ Error sending report email');
     }
   }
 

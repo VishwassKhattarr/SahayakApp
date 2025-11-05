@@ -214,10 +214,12 @@
 import express from "express";
 import PDFDocument from "pdfkit";
 import pkg from "pg";
+import { Resend } from 'resend';
 const { Pool } = pkg;
 
 const router = express.Router();
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // --- helpers ---
 async function tableExists(client, fqName = "public.student_marks") {
@@ -423,3 +425,151 @@ router.get("/generate/:studentId", async (req, res) => {
 
 
 export default router;
+
+// --- Send report via Resend (email with PDF attachment) ---
+router.post('/send/:studentId', async (req, res) => {
+  const { studentId } = req.params;
+
+  try {
+    // Fetch student and marks same as /generate
+    const studentQuery = `
+      SELECT 
+        s.name, 
+        s.email, 
+        s.roll_number, 
+        s.parent_contact,
+        s.parent_name,
+        s.parent_email,
+        c.class_name, 
+        sec.section_name, 
+        ay.year_name AS academic_year
+      FROM students s
+      LEFT JOIN student_class_enrollments e ON s.id = e.student_id
+      LEFT JOIN sections sec ON e.section_id = sec.id
+      LEFT JOIN classes c ON sec.class_id = c.id
+      LEFT JOIN academic_years ay ON e.academic_year_id = ay.id
+      WHERE s.id = $1
+      LIMIT 1;
+    `;
+    const studentResult = await pool.query(studentQuery, [studentId]);
+    if (studentResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    const st = studentResult.rows[0];
+
+    // get marks
+    const marksQuery = `
+      SELECT 
+        sub.subject_name AS subject,
+        sm.marks,
+        sm.max_marks
+      FROM student_marks sm
+      JOIN subjects sub ON sm.subject_id = sub.id
+      WHERE sm.student_id = $1 AND sm.term = 'Final'
+      ORDER BY sub.subject_name;
+    `;
+    const marksRes = await pool.query(marksQuery, [studentId]);
+    const marks = marksRes.rows || [];
+
+    // generate PDF into buffer
+    const doc = new PDFDocument({ margin: 50 });
+    const chunks = [];
+    doc.on('data', (chunk) => chunks.push(chunk));
+    const endPromise = new Promise((resolve, reject) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+    });
+
+    // Build the PDF
+    doc.fontSize(22).text('🏫 Sahayak Public School', { align: 'center' });
+    doc.moveDown(0.5);
+    doc.fontSize(16).text('Final Examination – Report Card', { align: 'center' });
+    doc.moveDown(1.5);
+    doc.fontSize(12);
+    doc.text(`Name: ${st.name}`);
+    doc.text(`Roll No: ${st.roll_number || 'N/A'}`);
+    doc.text(`Class: ${st.class_name || 'N/A'}`);
+    doc.text(`Section: ${st.section_name || 'N/A'}`);
+    doc.text(`Academic Year: ${st.academic_year || 'N/A'}`);
+    doc.text(`Parent: ${st.parent_name || 'N/A'} (${st.parent_contact || 'N/A'})`);
+    doc.moveDown(1.4);
+
+    doc.fontSize(14).text('Marks Summary', { underline: true });
+    doc.moveDown(0.6);
+    const left = 60;
+    const col1 = 250; const col2 = 100; const col3 = 100;
+    let y = doc.y;
+    doc.fontSize(12).text('Subject', left, y);
+    doc.text('Marks', left + col1, y);
+    doc.text('Max Marks', left + col1 + col2, y);
+    y += 16;
+    doc.moveTo(left, y).lineTo(550, y).stroke();
+    y += 8;
+
+    let total = 0; let maxTotal = 0;
+    marks.forEach((m) => {
+      doc.text(m.subject, left, y, { width: col1 });
+      doc.text(String(m.marks), left + col1, y, { width: col2 });
+      doc.text(String(m.max_marks), left + col1 + col2, y, { width: col3 });
+      y += 20;
+      total += Number(m.marks || 0);
+      maxTotal += Number(m.max_marks || 0);
+    });
+
+    const pct = maxTotal > 0 ? ((total / maxTotal) * 100).toFixed(2) : 'N/A';
+    doc.moveDown(2);
+    doc.text(`Total Marks: ${total} / ${maxTotal}`);
+    doc.text(`Percentage: ${pct}${pct !== 'N/A' ? '%' : ''}`);
+    doc.moveDown(4);
+    drawSignatureLines(doc, doc.y + 10);
+    doc.end();
+
+    const pdfBuffer = await endPromise;
+    const filename = `Report_${st.name.replace(/\s+/g, '_')}.pdf`;
+
+    // Determine recipient
+    const recipient = st.parent_email || st.email;
+    if (!recipient) {
+      return res.status(400).json({ message: 'No parent or student email available to send report' });
+    }
+
+    if (!resendClient) {
+      console.warn('Resend client not configured; returning PDF buffer for download instead');
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+      return res.send(pdfBuffer);
+    }
+
+    // Send email with attachment using Resend
+    try {
+      const sendRes = await resendClient.emails.send({
+        from: process.env.EMAIL_FROM || 'no-reply@sahayak.app',
+        to: recipient,
+        subject: `Report Card - ${st.name}`,
+        html: `<p>Dear ${st.parent_name || 'Parent'},</p><p>Please find attached the report card for ${st.name}.</p><p>Regards,<br/>Sahayak</p>`,
+        attachments: [
+          {
+            type: 'application/pdf',
+            name: filename,
+            data: pdfBuffer.toString('base64')
+          }
+        ]
+      });
+
+  // Log successful send to server console (visible in VS Code terminal)
+  console.log(`Report emailed: studentId=${studentId}, to=${recipient}, resendId=${sendRes?.id || 'N/A'}`);
+  // Also log full resend response for debugging delivery status
+  console.log('Resend response (raw):', JSON.stringify(sendRes, null, 2));
+
+  // Return resend response to caller for debugging (trim sensitive fields if needed)
+  return res.json({ success: true, message: `Email sent to ${recipient}`, resendId: sendRes?.id || null, resendResponse: sendRes });
+    } catch (err) {
+      console.error('Resend send error:', err);
+      return res.status(500).json({ success: false, message: 'Failed to send email via Resend', error: err.message || String(err) });
+    }
+
+  } catch (err) {
+    console.error('Error in /send/:studentId:', err);
+    res.status(500).json({ message: 'Server error while sending report' });
+  }
+});
