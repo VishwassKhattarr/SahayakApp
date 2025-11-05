@@ -9,6 +9,9 @@ const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GE
 
 // --- Nodemailer Setup ---
 const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST, // <-- Are these variable names correct?
+  port: process.env.SMTP_PORT, // <-- Is this a number?
+  secure: false,
     service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
