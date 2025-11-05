@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        statusP.textContent = 'Upload processed successfully ✅';
+        statusP.textContent = 'Upload processed successfully';
         const s = data.summary || data;
 
         summaryDiv.classList.remove('hidden');
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 🧑‍🏫 Add Teacher Form Submission
+  // Add Teacher Form Submission
   const teacherForm = document.getElementById('teacher-form');
   if (teacherForm) {
     teacherForm.addEventListener('submit', async (e) => {
@@ -76,12 +76,12 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        alert('✅ ' + data.message);
+        alert('Success: ' + data.message);
 
         // Clear input fields after success
         teacherForm.reset();
       } catch (err) {
-        alert('❌ Failed to add teacher: ' + err.message);
+        alert('Error: Failed to add teacher: ' + err.message);
       }
     });
   }

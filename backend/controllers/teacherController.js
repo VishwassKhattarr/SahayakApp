@@ -321,12 +321,12 @@ export const assignTeacher = async (req, res) => {
     );
 
     if (result.rows.length > 0) {
-      res.json({ success: true, message: 'Teacher assigned successfully ✅' });
+      res.json({ success: true, message: 'Teacher assigned successfully' });
     } else {
       res.json({ success: true, message: 'Teacher already assigned to this class.' });
     }
   } catch (error) {
-    console.error('❌ Error assigning teacher:', error.message);
+    console.error('Error assigning teacher:', error.message);
     res.status(500).json({ success: false, message: 'Server error assigning teacher' });
   }
 };

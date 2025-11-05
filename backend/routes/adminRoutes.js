@@ -55,12 +55,12 @@ router.get('/subjects', getAllSubjects);
 router.get('/academic_years', getAllYears);
 router.get('/students', getAllStudents);
 
-// 🔐 Admin login route
+// Admin login route
 router.post('/admin/login', adminLogin);
 router.post('/students/upload', upload.single('csvFile'), uploadStudentsCsv);
 
 
-// 📤 Teacher CSV upload route
+// Teacher CSV upload route
 router.post('/teachers/upload', upload.single('csvFile'), uploadTeachersCsv);
 
 //toggle active status

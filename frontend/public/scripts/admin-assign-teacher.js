@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
-  // ✅ populate dropdowns
+  // Populate dropdowns
   await fetchAndFill("/api/teachers", teacherSelect);
   await fetchAndFill("/api/classes", classSelect);
   await fetchAndFill("/api/sections", sectionSelect);
@@ -69,13 +69,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       const data = await res.json();
 
       if (data.success) {
-        statusMsg.textContent = "✅ " + data.message;
+        statusMsg.textContent = "Success: " + data.message;
         form.reset();
       } else {
         statusMsg.textContent = "⚠️ " + (data.message || "Assignment failed.");
       }
     } catch (err) {
-      statusMsg.textContent = "❌ Server error: " + err.message;
+      statusMsg.textContent = "Error: Server error: " + err.message;
     }
   });
 });
