@@ -60,16 +60,29 @@ function setupEventListeners(teacherAssignmentId) {
     const chapterContainer = document.getElementById('chapter-list-container');
     const submissionList = document.getElementById('student-submission-list');
 
-    // --- 1. Handle Chapter Selection ---
+    // --- 1. Handle Chapter Selection (FIX: Added loading state) ---
     chapterContainer.addEventListener('click', e => {
         if (e.target.classList.contains('chapter-select-btn')) {
-            const chapterId = e.target.dataset.chapterId;
-            const chapterName = e.target.dataset.chapterName;
+            const chapterButton = e.target;
+            const chapterId = chapterButton.dataset.chapterId;
+            const chapterName = chapterButton.dataset.chapterName;
 
-            document.querySelectorAll('.chapter-select-btn').forEach(btn => btn.classList.remove('btn-active'));
-            e.target.classList.add('btn-active');
+            // Check if already loading
+            if (chapterButton.disabled) return; 
 
-            loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapterName);
+            // Deactivate all other buttons
+            document.querySelectorAll('.chapter-select-btn').forEach(btn => {
+                btn.classList.remove('btn-active');
+                btn.disabled = false;
+            });
+            
+            // Set this button to active/loading
+            chapterButton.classList.add('btn-active');
+            chapterButton.disabled = true;
+            chapterButton.textContent = 'Loading...';
+
+            // Pass the button itself to the load function to reset its text
+            loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapterName, chapterButton);
         }
     });
 
@@ -88,6 +101,9 @@ function setupEventListeners(teacherAssignmentId) {
         if (targetId) {
             const targetDiv = document.getElementById(targetId);
             if (targetDiv) {
+                // This logic is correct: 
+                // 1. If active, toggle('hidden', true) -> HIDES
+                // 2. If inactive, toggle('hidden', false) -> SHOWS
                 targetDiv.classList.toggle('hidden', isActive);
                 button.classList.toggle('btn-active', !isActive);
                 
@@ -103,8 +119,9 @@ function setupEventListeners(teacherAssignmentId) {
 
 /**
  * Fetches all submissions for a chapter and renders the student list.
+ * (FIX: Now accepts 'chapterButton' to reset its text)
  */
-async function loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapterName) {
+async function loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapterName, chapterButton) {
     const section = document.getElementById('worksheet-section');
     const list = document.getElementById('student-submission-list');
     const title = document.getElementById('worksheet-chapter-title');
@@ -114,7 +131,7 @@ async function loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapter
 
     section.classList.remove('hidden');
     title.textContent = `Submissions for: ${chapterName}`;
-    list.innerHTML = '<p>Loading submissions...</p>';
+    list.innerHTML = '<p>Loading submissions...</p>'; // This is the main loading message
 
     try {
         const response = await fetch(`/api/submissions/chapter/${teacherAssignmentId}/${chapterId}`, {
@@ -126,6 +143,7 @@ async function loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapter
         }
 
         const submissions = await response.json();
+        console.log('Submissions data fetched:', submissions);
         
         list.innerHTML = ''; // Clear loading
         if (submissions.length === 0) {
@@ -192,7 +210,8 @@ async function loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapter
                 
                 const answerPre = document.createElement('pre');
                 
-                // ✅ YEH LOGIC "BLANK" SCREEN KO FIX KAREGA
+                // ✅ FIX FOR BLANK SCREEN (HANDLES NULL & UNDEFINED)
+                // Checks if the 'student_answers_raw' key exists and is not empty
                 if (sub.student_answers_raw && sub.student_answers_raw.trim() !== '') {
                     answerPre.textContent = sub.student_answers_raw;
                 } else {
@@ -214,7 +233,8 @@ async function loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapter
                 
                 const remarkPre = document.createElement('pre');
 
-                // ✅ YEH LOGIC "BLANK" SCREEN KO FIX KAREGA
+                // ✅ FIX FOR BLANK SCREEN (HANDLES NULL, UNDEFINED, AND IN-PROGRESS)
+                // Checks if the 'ai_evaluation_details' key exists and is not empty
                 if (sub.ai_evaluation_details && sub.ai_evaluation_details.trim() !== '') {
                     remarkPre.textContent = sub.ai_evaluation_details;
                 } else if (sub.ai_assigned_marks === 'Error') {
@@ -242,5 +262,11 @@ async function loadSubmissionsForChapter(teacherAssignmentId, chapterId, chapter
     } catch (error) {
         // Yahan "Server error retrieving submissions" dikhega
         list.innerHTML = `<p style="color: red; font-weight: bold;">Error: ${error.message}</p>`;
+    } finally {
+        // ✅ FIX: Reset the button text after the API call finishes (success or fail)
+        if (chapterButton) {
+            chapterButton.disabled = false;
+            chapterButton.textContent = chapterButton.dataset.chapterName;
+        }
     }
 }
