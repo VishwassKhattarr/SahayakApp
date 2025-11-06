@@ -27,8 +27,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Load sections based on class
+ // Load sections based on class
  classFilter.addEventListener('change', async () => {
   const classId = classFilter.value;
+  // ✅ FIX: Get the text of the selected option (e.g., "10")
+  const className = classFilter.value ? classFilter.options[classFilter.selectedIndex].text : '';
   console.log("📌 Class selected:", classId);
 
   sectionFilter.innerHTML = '<option value="">All Sections</option>';
@@ -36,7 +39,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (classId) {
     try {
-      const url = `/api/admin/sections?class_id=${classId}`;
+      // ✅ FIX: Filter sections by class_name as expected by the backend controller
+      const url = `/api/admin/sections?class_name=${encodeURIComponent(className)}`;
       console.log("🌐 Fetching sections from:", url);
 
       const res = await fetch(url);
