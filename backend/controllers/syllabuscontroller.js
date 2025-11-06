@@ -312,7 +312,7 @@ export const markChapterComplete = async (req, res) => {
                         
                         // Pass the HTML and text content
                         html: `<p>Hello!</p><p>Please find your new worksheet below. Submit your answers using the Google Form link provided.</p><hr><h3>Worksheet: ${chapter_name}</h3><pre style="white-space: pre-wrap; word-wrap: break-word;">${worksheetContent}</pre><hr><h3><a href="${prefilledLink}">Click Here to Submit Your Answers</a></h3>`,
-                        text: `Hello!\n\nPlease find your new worksheet below. Submit your answers using the Google Form link provided.\n\n--- Worksheet ---\n${workskeyContent}\n\n--- Submission Link ---\n${prefilledLink}`,
+                        text: `Hello!\n\nPlease find your new worksheet below. Submit your answers using the Google Form link provided.\n\n--- Worksheet ---\n${worksheetContent}\n\n--- Submission Link ---\n${prefilledLink}`,
                     });
 
                     if (error) {
