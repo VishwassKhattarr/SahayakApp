@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       data.students.forEach((st) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${st.id}</td>
+          
           <td>${st.name}</td>
           <td>${st.email}</td>
           <td>${st.roll_number}</td>
