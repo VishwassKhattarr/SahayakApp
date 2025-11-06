@@ -1,9 +1,9 @@
 console.log("✅ admin-view-students.js LOADED");
 
-
 document.addEventListener('DOMContentLoaded', () => {
   console.log("✅ DOM fully loaded and parsed");
 });
+
 document.addEventListener('DOMContentLoaded', async () => {
   const tableBody = document.querySelector('#students-table tbody');
   const classFilter = document.getElementById('class-filter');
@@ -27,104 +27,108 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Load sections based on class
- // Load sections based on class
- classFilter.addEventListener('change', async () => {
-  const classId = classFilter.value;
-  // ✅ FIX: Get the text of the selected option (e.g., "10")
-  const className = classFilter.value ? classFilter.options[classFilter.selectedIndex].text : '';
-  console.log("📌 Class selected:", classId);
+  classFilter.addEventListener('change', async () => {
+    const classId = classFilter.value;
+    // ✅ This part is correct: Get the TEXT of the selected option (e.g., "10")
+    const className = classFilter.value ? classFilter.options[classFilter.selectedIndex].text : '';
+    console.log("📌 Class selected:", classId, "Name:", className);
 
-  sectionFilter.innerHTML = '<option value="">All Sections</option>';
-  sectionFilter.disabled = true;
+    sectionFilter.innerHTML = '<option value="">All Sections</option>';
+    sectionFilter.disabled = true;
 
-  if (classId) {
-    try {
-      // ✅ FIX: Filter sections by class_name as expected by the backend controller
-      const url = `/api/admin/sections?class_name=${encodeURIComponent(className)}`;
-      console.log("🌐 Fetching sections from:", url);
+    if (classId) {
+      try {
+        // ✅ This part is correct: Filter sections by class_name
+        const url = `/api/admin/sections?class_name=${encodeURIComponent(className)}`;
+        console.log("🌐 Fetching sections from:", url);
 
-      const res = await fetch(url);
-      console.log("🔍 API status:", res.status);
+        const res = await fetch(url);
+        console.log("🔍 API status:", res.status);
 
-      const data = await res.json();
-      console.log("📦 API response:", data);
+        const data = await res.json();
+        console.log("📦 API response:", data);
 
-      if (data.success && data.sections.length > 0) {
-        data.sections.forEach((sec) => {
-          const opt = document.createElement('option');
-          opt.value = sec.id;
-          opt.textContent = sec.section_name;
-          sectionFilter.appendChild(opt);
-        });
+        if (data.success && data.sections.length > 0) {
+          data.sections.forEach((sec) => {
+            const opt = document.createElement('option');
+            opt.value = sec.id;
+            opt.textContent = sec.section_name;
+            sectionFilter.appendChild(opt);
+          });
 
-        console.log(`✅ ${data.sections.length} sections loaded`);
-        sectionFilter.disabled = false;
-      } else {
-        console.warn("⚠️ API returned no sections");
+          console.log(`✅ ${data.sections.length} sections loaded`);
+          sectionFilter.disabled = false;
+        } else {
+          console.warn("⚠️ API returned no sections");
+        }
+
+      } catch (err) {
+        console.error('❌ Error fetching sections:', err);
       }
-
-    } catch (err) {
-      console.error('❌ Error fetching sections:', err);
     }
-  }
-});
+  });
 
 
   // Fetch and render students
- // Fetch and render students
-// Fetch and render students
-async function loadStudents(className = '', sectionName = '') {
-  try {
-    let url = `/api/admin/students`;
+  // ✅ FIX #1: The function signature is updated to expect 'section_id'
+  async function loadStudents(className = '', section_id = '') {
+    try {
+      let url = `/api/admin/students`;
 
-    // ✅ Build dynamic URL based on selected filters
-    if (className || sectionName) {
-      const params = new URLSearchParams();
-      if (className) params.append('class_name', className);
-      if (sectionName) params.append('section_name', sectionName);
-      url += `?${params.toString()}`;
-    }
+      // ✅ Build dynamic URL based on selected filters
+      if (className || section_id) {
+        const params = new URLSearchParams();
+        
+        // The backend controller (studentController.js) looks for 'class_name'
+        if (className) params.append('class_name', className); 
+        
+        // ✅ FIX #2: The backend controller looks for 'section_id', not 'section_name'
+        if (section_id) params.append('section_id', section_id); 
+        
+        url += `?${params.toString()}`;
+      }
+      
+      console.log("🚀 Calling loadStudents with URL:", url);
 
-    const res = await fetch(url);
-    const data = await res.json();
+      const res = await fetch(url);
+      const data = await res.json();
 
-    tableBody.innerHTML = '';
+      tableBody.innerHTML = '';
 
-    if (!data.success || data.students.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center;">No students found.</td></tr>`;
-      return;
-    }
+      if (!data.success || data.students.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center;">No students found.</td></tr>`;
+        return;
+      }
 
-    data.students.forEach((st) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${st.id}</td>
-        <td>${st.name}</td>
-        <td>${st.email}</td>
-        <td>${st.roll_number}</td>
-        <td>${st.class_name || '-'}</td>
-        <td>${st.section_name || '-'}</td>
-        <td>${st.parent_contact || '-'}</td>
-        <td>${st.parent_email || '-'}</td>
-        <td>
-          <button class="btn btn-report" data-id="${st.id}">📄 Report</button>
-        </td>
-      `;
-      tableBody.appendChild(tr);
-    });
-
-    document.querySelectorAll('.btn-report').forEach((btn) => {
-      btn.addEventListener('click', async (e) => {
-        const studentId = e.target.getAttribute('data-id');
-        await generateReport(studentId);
+      data.students.forEach((st) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${st.id}</td>
+          <td>${st.name}</td>
+          <td>${st.email}</td>
+          <td>${st.roll_number}</td>
+          <td>${st.class_name || '-'}</td>
+          <td>${st.section_name || '-'}</td>
+          <td>${st.parent_contact || '-'}</td>
+          <td>${st.parent_email || '-'}</td>
+          <td>
+            <button class="btn btn-report" data-id="${st.id}">📄 Report</button>
+          </td>
+        `;
+        tableBody.appendChild(tr);
       });
-    });
-  } catch (err) {
-    console.error('Error loading students:', err);
-    tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center;">Error fetching students.</td></tr>`;
-  }
-}
 
+      document.querySelectorAll('.btn-report').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+          const studentId = e.target.getAttribute('data-id');
+          await generateReport(studentId);
+        });
+      });
+    } catch (err) {
+      console.error('Error loading students:', err);
+      tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center;">Error fetching students.</td></tr>`;
+    }
+  }
 
 
   // Generate a single student's report PDF
@@ -199,9 +203,13 @@ async function loadStudents(className = '', sectionName = '') {
 
   // Filter button click
   filterBtn.addEventListener('click', () => {
-  const className = classFilter.value;
-  const sectionName = sectionFilter.value;
-  loadStudents(className, sectionName);
-});
+    // ✅ FIX #3: Get the Class NAME (text) for the 'className' parameter
+    const className = classFilter.value ? classFilter.options[classFilter.selectedIndex].text : '';
+    // ✅ FIX #4: Get the Section ID (value) for the 'section_id' parameter
+    const sectionId = sectionFilter.value;
+    
+    // Pass the correct values to loadStudents
+    loadStudents(className, sectionId);
+  });
 
 });
