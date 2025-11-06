@@ -158,9 +158,11 @@ export const markChapterComplete = async (req, res) => {
 
     try {
         // 1. Verify ownership
+        // --- FIX 1: Fetch class_id ---
         const assignmentCheck = await pool.query(
             `SELECT 
-                tca.section_id, 
+                tca.section_id,
+                tca.class_id, 
                 cls.class_name, 
                 sec.section_name, 
                 sub.subject_name
@@ -174,7 +176,8 @@ export const markChapterComplete = async (req, res) => {
 
         if (assignmentCheck.rows.length === 0) return res.status(403).json({ message: 'Access denied' });
 
-        const { section_id, class_name, section_name, subject_name } = assignmentCheck.rows[0];
+        // --- FIX 2: Store both IDs ---
+        const { section_id: assignedSectionId, class_id: assignedClassId, class_name, section_name, subject_name } = assignmentCheck.rows[0];
         const full_class_name = `${class_name}-${section_name}`;
 
         const chapterInfo = await pool.query('SELECT chapter_name FROM chapters WHERE id = $1', [chapterId]);
@@ -202,20 +205,26 @@ export const markChapterComplete = async (req, res) => {
             // 4. Generate content with AI (robust multi-client handling)
             console.log(`Generating worksheet for Chapter ID: ${chapterId}, Assignment ID: ${teacherAssignmentId}`);
             const prompt = `
-                You are an expert ${subject_name} teacher. Generate a worksheet with 10 questions for ${full_class_name} students based on the chapter: "${chapter_name}".
-                Also provide a separate, detailed answer key. Format the output in Markdown with two sections: "# Worksheet: ${chapter_name}" and "# Answer Key".`;
+                Generate a worksheet with 10 questions for ${full_class_name} students based on the chapter: "${chapter_name}".
+                Also provide a separate, detailed answer key.
+                
+                Format the output *only* in Markdown with two sections: "# Worksheet: ${chapter_name}" and "# Answer Key".
+                
+                Do not include any introductory text, conversational phrases, or extra formatting like "Time Allotted".
+                Start the response directly with the "# Worksheet:" heading. 
+            `;
 
             // Adaptive call depending on client API
             let fullContent = '';
             try {
                 if (typeof ai.getGenerativeModel === 'function') {
                     // older/newer client exposing getGenerativeModel()
-                    const model = ai.getGenerativeModel({ model: "gemini-pro" });
+                    const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
                     const result = await model.generateContent(prompt);
                     fullContent = extractText(result).trim();
                 } else if (ai.models && typeof ai.models.generateContent === 'function') {
                     // client with models.generateContent({ model, contents })
-                    const result = await ai.models.generateContent({ model: "gemini-pro", contents: prompt });
+                    const result = await ai.models.generateContent({ model: "gemini-2.5-flash", contents: prompt });
                     fullContent = extractText(result).trim();
                 } else if (typeof ai.generateContent === 'function') {
                     // client with direct generateContent(prompt)
@@ -267,9 +276,17 @@ export const markChapterComplete = async (req, res) => {
         }
 
         // 6. Get student emails
+        // --- FIX 3: Replaced query with the robust version ---
         const studentRes = await pool.query(
-            `SELECT s.email FROM students s JOIN student_class_enrollments sce ON s.id = sce.student_id WHERE sce.section_id = $1 AND s.email IS NOT NULL AND s.email <> ''`,
-            [section_id]
+            `SELECT s.email 
+             FROM students s 
+             JOIN student_class_enrollments sce ON s.id = sce.student_id
+             JOIN sections sec ON sce.section_id = sec.id
+             WHERE 
+                sec.class_id = $1
+                AND sec.section_name = (SELECT section_name FROM sections WHERE id = $2)
+                AND s.email IS NOT NULL AND s.email <> ''`,
+            [assignedClassId, assignedSectionId] // Pass class_id ($1) and section_id ($2)
         );
         const studentEmails = studentRes.rows.map(r => r.email);
 
@@ -295,7 +312,7 @@ export const markChapterComplete = async (req, res) => {
                         
                         // Pass the HTML and text content
                         html: `<p>Hello!</p><p>Please find your new worksheet below. Submit your answers using the Google Form link provided.</p><hr><h3>Worksheet: ${chapter_name}</h3><pre style="white-space: pre-wrap; word-wrap: break-word;">${worksheetContent}</pre><hr><h3><a href="${prefilledLink}">Click Here to Submit Your Answers</a></h3>`,
-                        text: `Hello!\n\nPlease find your new worksheet below. Submit your answers using the Google Form link provided.\n\n--- Worksheet ---\n${worksheetContent}\n\n--- Submission Link ---\n${prefilledLink}`,
+                        text: `Hello!\n\nPlease find your new worksheet below. Submit your answers using the Google Form link provided.\n\n--- Worksheet ---\n${workskeyContent}\n\n--- Submission Link ---\n${prefilledLink}`,
                     });
 
                     if (error) {

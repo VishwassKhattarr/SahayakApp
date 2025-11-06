@@ -39,21 +39,26 @@ const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GE
 function buildGenerationPrompt(text, type, difficulty) {
     let instruction = '';
     
+    // Common constraints to add to every prompt
+    const constraints = `
+Do not add any introductory text, conversational phrases, conclusions, or extra formatting like "Time Allotted".
+Begin the response directly with the requested content. Ensure clarity and correctness in all parts of the output.`;
+
     switch (type) {
         case 'summary':
-            instruction = `Summarize the following lecture text for a student at a ${difficulty} level.The summary should be long enough to cover each and every concept present in the given content. Make use of pointers and bullet points, list and different sorts of analysis`;
+            instruction = `Summarize the following lecture text for a student at a ${difficulty} level.The summary should be long enough to cover each and every concept present in the given content. Make use of pointers and bullet points, list and different sorts of analysis. ${constraints}`;
             break;
         case 'questions':
-            instruction = `Based on the following lecture text, create minimum 15 detailed questions suitable for a student at a ${difficulty} level, the number of questions can increase 15 as well, priority should be to cover every concept in the questions.`;
+            instruction = `Based on the following lecture text, create minimum 15 detailed questions suitable for a student at a ${difficulty} level, the number of questions can increase 15 as well, priority should be to cover every concept in the questions. ${constraints}`;
             break;
         case 'both':
             instruction = `Perform two tasks based on the following lecture text: 
                 1.Provide a concise summary suitable for a student at a ${difficulty} level.The summary should be long enough to cover each and every concept present in the given content. Make use of pointers and bullet points, list and different sorts of analysis
                 2.Create minimum 15 detailed questions suitable for a student at a ${difficulty} level, the number of questions can increase 15 as well, priority should be to cover every concept in the questions.
-                Format the output clearly with headings for 'Summary' and 'Questions'.`;
+                Format the output clearly with headings for 'Summary' and 'Questions'. ${constraints}`;
             break;
         case 'mcq':
-            instruction = `Generate minimum of 20 mcqs based on the lecture text, the number of mcqs can increase 20 and go upto 50 as well, depending on the vastness of the lecture text, just make sure that options are relevant and confusing to choose the right answer and also give answer key of the mcqs at the end of the worksheet. The mcqs shall and must cover each and every relevant concept present in the lecture text.`
+            instruction = `Generate minimum of 20 mcqs based on the lecture text, the number of mcqs can increase 20 and go upto 50 as well, depending on the vastness of the lecture text, just make sure that options are relevant and confusing to choose the right answer and also give answer key of the mcqs at the end of the worksheet. The mcqs shall and must cover each and every relevant concept present in the lecture text. ${constraints}`
     }
 
     return `${instruction}\n\n---LECTURE TEXT---\n\n${text}`;

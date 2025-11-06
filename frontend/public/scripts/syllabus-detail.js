@@ -194,7 +194,15 @@ function downloadPdf(content, chapterName, type) {
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
 
-        const fullText = `# ${type}: ${chapterName}\n\n${content}`;
+        // --- CORRECTED ---
+        // Clean the AI-generated body content of markdown
+        const cleanedContent = content.replace(/#+\s/g, '')  // Removes sub-headings
+                                      .replace(/\*\*/g, '')   // Removes bold
+                                      .replace(/\*/g, '')    // Removes italics/bullets
+                                      .replace(/---/g, '');   // Removes rules
+
+        // We still add our *own* # for the title, which the PDF generator uses
+        const fullText = `# ${type}: ${chapterName}\n\n${cleanedContent}`;
         const fileName = `${chapterName}_${type.replace(' ', '_')}.pdf`;
         
         const pageWidth = pdf.internal.pageSize.getWidth();
@@ -210,7 +218,7 @@ function downloadPdf(content, chapterName, type) {
                 pdf.addPage();
                 y = 20;
             }
-            // Simple bolding for titles
+            // Simple bolding for *our* title
             if (line.startsWith('# ')) {
                 pdf.setFont('helvetica', 'bold');
                 pdf.setFontSize(14);

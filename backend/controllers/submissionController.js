@@ -17,11 +17,13 @@ export const getSubmissionsForChapter = async (req, res) => {
 
     try {
         // 1. Security check: Teacher assignment ka maalik hai?
-        const ownerCheck = await pool.query('SELECT section_id FROM teacher_class_assignments WHERE id = $1 AND teacher_id = $2', [teacherAssignmentId, teacherId]);
+        // --- CORRECTED: Fetch class_id as well ---
+        const ownerCheck = await pool.query('SELECT section_id, class_id FROM teacher_class_assignments WHERE id = $1 AND teacher_id = $2', [teacherAssignmentId, teacherId]);
         if (ownerCheck.rows.length === 0) {
             return res.status(403).json({ message: 'Access denied to this assignment.' });
         }
-        const sectionId = ownerCheck.rows[0].section_id;
+        // --- CORRECTED: Store both IDs ---
+        const { section_id: assignedSectionId, class_id: assignedClassId } = ownerCheck.rows[0];
 
         // 2. Us generated_worksheet ka ID dhoondho
          const worksheetCheck = await pool.query('SELECT id FROM generated_worksheets WHERE teacher_assignment_id = $1 AND chapter_id = $2', [teacherAssignmentId, chapterId]);
@@ -33,7 +35,7 @@ export const getSubmissionsForChapter = async (req, res) => {
          }
 
         // 3. Sabhi students aur unke submissions fetch karo
-        // ✅ Yeh query ab correct hai aur n8n ka data fetch kar rahi hai
+        // --- CORRECTED: This query now joins with 'sections' and filters by both class_id and section_name ---
         const query = `
             SELECT
                 s.id as student_id,
@@ -47,12 +49,16 @@ export const getSubmissionsForChapter = async (req, res) => {
                 ws.ai_evaluation_details     -- <<< Yeh column fetch ho raha hai
             FROM students s
             JOIN student_class_enrollments sce ON s.id = sce.student_id
+            JOIN sections sec ON sce.section_id = sec.id
             LEFT JOIN worksheet_submissions ws ON s.id = ws.student_id AND ws.generated_worksheet_id = $2 
-            WHERE sce.section_id = $1 
+            WHERE 
+                sec.class_id = $3
+                AND sec.section_name = (SELECT section_name FROM sections WHERE id = $1)
             ORDER BY s.roll_number;
         `;
         
-        const { rows } = await pool.query(query, [sectionId, generatedWorksheetId]);
+        // --- CORRECTED: Pass all three parameters in the correct order ($1, $2, $3) ---
+        const { rows } = await pool.query(query, [assignedSectionId, generatedWorksheetId, assignedClassId]);
         
         // 4. Data frontend ko bhej do
         res.json(rows);

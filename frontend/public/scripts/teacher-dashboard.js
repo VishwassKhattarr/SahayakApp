@@ -2,56 +2,56 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     loadSyllabusTrackers();
-    loadTeacherClasses();
+    //loadTeacherClasses();
 
     // Add click handler for attendance button
-    const attendanceBtn = document.getElementById('mark-attendance-btn');
-    if (attendanceBtn) {
-        attendanceBtn.addEventListener('click', redirectToAttendance);
-    }
+    // const attendanceBtn = document.getElementById('mark-attendance-btn');
+    // if (attendanceBtn) {
+    //     attendanceBtn.addEventListener('click', redirectToAttendance);
+    // }
 });
 
-async function loadTeacherClasses() {
-    const classSelect = document.getElementById('attendance-class-select');
-    const token = localStorage.getItem('token');
+// async function loadTeacherClasses() {
+//     const classSelect = document.getElementById('attendance-class-select');
+//     const token = localStorage.getItem('token');
 
-    try {
-        const response = await fetch('/api/teacher/classes', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+//     try {
+//         const response = await fetch('/api/teacher/classes', {
+//             headers: { 'Authorization': `Bearer ${token}` }
+//         });
 
-        if (!response.ok) throw new Error('Failed to fetch classes');
+//         if (!response.ok) throw new Error('Failed to fetch classes');
 
-        const classes = await response.json();
+//         const classes = await response.json();
 
-        if (classes.length === 0) {
-            classSelect.innerHTML = '<option value="">No classes assigned</option>';
-            return;
-        }
+//         if (classes.length === 0) {
+//             classSelect.innerHTML = '<option value="">No classes assigned</option>';
+//             return;
+//         }
 
-        classSelect.innerHTML = `
-            <option value="">Select Class</option>
-            ${classes.map(cls => `
-                <option value="${cls.teacher_assignment_id}">${cls.class_name} ${cls.section_name} - ${cls.subject_name}</option>
-            `).join('')}
-        `;
-    } catch (error) {
-        console.error('Error loading classes:', error);
-        classSelect.innerHTML = '<option value="">Error loading classes</option>';
-    }
-}
+//         classSelect.innerHTML = `
+//             <option value="">Select Class</option>
+//             ${classes.map(cls => `
+//                 <option value="${cls.teacher_assignment_id}">${cls.class_name} ${cls.section_name} - ${cls.subject_name}</option>
+//             `).join('')}
+//         `;
+//     } catch (error) {
+//         console.error('Error loading classes:', error);
+//         classSelect.innerHTML = '<option value="">Error loading classes</option>';
+//     }
+// }
 
-function redirectToAttendance() {
-    const classSelect = document.getElementById('attendance-class-select');
-    const selectedClass = classSelect.value;
+// function redirectToAttendance() {
+//     const classSelect = document.getElementById('attendance-class-select');
+//     const selectedClass = classSelect.value;
 
-    if (!selectedClass) {
-        alert('Please select a class first');
-        return;
-    }
+//     if (!selectedClass) {
+//         alert('Please select a class first');
+//         return;
+//     }
 
-    window.location.href = `/pages/attendance.html?classId=${selectedClass}`;
-}
+//     window.location.href = `/pages/attendance.html?classId=${selectedClass}`;
+// }
 
 async function loadSyllabusTrackers() {
     const syllabusContainer = document.getElementById('tracker-list-container');
