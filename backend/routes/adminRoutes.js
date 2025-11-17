@@ -16,8 +16,8 @@ import { uploadStudentsCsv } from '../controllers/studentUploadController.js';
 import { getAllStudents } from '../controllers/studentController.js';
 import { uploadTeachersCsv } from '../controllers/teacherUploadController.js';
 
-
-
+// --- IMPORT THE NEW FUNCTION ---
+import { assignClassTeacher } from '../controllers/teacherController.js';
 
 import { adminLogin } from '../controllers/adminController.js';
 
@@ -71,7 +71,12 @@ router.put('/teachers/:id/status', toggleTeacherStatus);
 
 router.post('/teachers/add', addSingleTeacher);
 
+// Assign Subject Teacher
 router.post('/teachers/assign', assignTeacher);
+
+// --- ADD THE NEW ROUTE ---
+// Assign Class Teacher (for attendance)
+router.post('/assign-class-teacher', assignClassTeacher);
 
 
 export default router;

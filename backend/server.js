@@ -11,6 +11,8 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import reportRoutes from "./routes/reportRoutes.js";
+// --- 1. IMPORT NEW ATTENDANCE ROUTES ---
+import attendanceRoutes from './routes/attendanceRoutes.js'; 
 
 // ESM equivalent of __dirname and __filename
 const __filename = fileURLToPath(import.meta.url);
@@ -37,6 +39,9 @@ app.use('/api/auth', teacherRoutes);
 app.use('/api/auth', adminRoutes);
 app.use('/api/auth', verifyRoutes);
 app.use("/api/reports", reportRoutes);
+
+// --- 2. USE NEW ATTENDANCE ROUTES ---
+app.use('/api/attendance', attendanceRoutes);
 
 // Teacher routes - ensure it's before any other routes using teacherRoutes
 app.use('/api/teacher', teacherRoutes);
