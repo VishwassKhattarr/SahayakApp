@@ -303,7 +303,7 @@ export const markChapterComplete = async (req, res) => {
                 try {
                     const { data, error } = await resend.emails.send({
                         // IMPORTANT: Use this 'from' until your domain is verified
-                        from: 'Sahayak App <onboarding@resend.dev>',
+                        from: 'onboarding@resend.dev',
                         
                         // 'to' must be an array
                         to: [email], 
