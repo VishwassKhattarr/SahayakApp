@@ -2,56 +2,51 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     loadSyllabusTrackers();
-    //loadTeacherClasses();
-
-    // Add click handler for attendance button
-    // const attendanceBtn = document.getElementById('mark-attendance-btn');
-    // if (attendanceBtn) {
-    //     attendanceBtn.addEventListener('click', redirectToAttendance);
-    // }
+    // --- 1. ADD NEW FUNCTION CALL ---
+    checkIfClassTeacher(); 
 });
 
-// async function loadTeacherClasses() {
-//     const classSelect = document.getElementById('attendance-class-select');
-//     const token = localStorage.getItem('token');
+// --- 2. ADD NEW FUNCTION TO CHECK CLASS TEACHER STATUS ---
+async function checkIfClassTeacher() {
+    const token = localStorage.getItem('token');
+    const container = document.getElementById('class-teacher-section');
+    const actionsContainer = document.getElementById('class-teacher-actions-container');
 
-//     try {
-//         const response = await fetch('/api/teacher/classes', {
-//             headers: { 'Authorization': `Bearer ${token}` }
-//         });
+    try {
+        const response = await fetch('/api/teacher/class-teacher-section', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Could not verify class teacher status');
 
-//         if (!response.ok) throw new Error('Failed to fetch classes');
+        const data = await response.json();
 
-//         const classes = await response.json();
+        if (data.success && data.isClassTeacher) {
+            // Show the section
+            container.style.display = 'block';
+            
+            // Create and add the button
+            const attendanceBtn = document.createElement('a');
+            attendanceBtn.className = 'btn primary-btn';
+            attendanceBtn.href = `/pages/attendance.html?sectionId=${data.sectionId}&sectionName=${encodeURIComponent(data.sectionName)}`;
+            attendanceBtn.textContent = `Mark Attendance for ${data.sectionName}`;
+            
+            actionsContainer.innerHTML = ''; // Clear any loading text
+            actionsContainer.appendChild(attendanceBtn);
+        } else {
+            // Not a class teacher, do nothing
+            container.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error checking class teacher status:', error);
+        actionsContainer.innerHTML = '<p class="error">Could not load class teacher actions.</p>';
+        container.style.display = 'block';
+    }
+}
+// --- END OF NEW FUNCTION ---
 
-//         if (classes.length === 0) {
-//             classSelect.innerHTML = '<option value="">No classes assigned</option>';
-//             return;
-//         }
 
-//         classSelect.innerHTML = `
-//             <option value="">Select Class</option>
-//             ${classes.map(cls => `
-//                 <option value="${cls.teacher_assignment_id}">${cls.class_name} ${cls.section_name} - ${cls.subject_name}</option>
-//             `).join('')}
-//         `;
-//     } catch (error) {
-//         console.error('Error loading classes:', error);
-//         classSelect.innerHTML = '<option value="">Error loading classes</option>';
-//     }
-// }
 
-// function redirectToAttendance() {
-//     const classSelect = document.getElementById('attendance-class-select');
-//     const selectedClass = classSelect.value;
-
-//     if (!selectedClass) {
-//         alert('Please select a class first');
-//         return;
-//     }
-
-//     window.location.href = `/pages/attendance.html?classId=${selectedClass}`;
-// }
 
 async function loadSyllabusTrackers() {
     const syllabusContainer = document.getElementById('tracker-list-container');

@@ -17,6 +17,11 @@
              <button id="logout-btn" class="btn secondary-btn">Logout</button>
         </header>
 
+        <section id="class-teacher-section" class="admin-section" style="display: none;">
+            <h2>Class Teacher Actions</h2>
+            <div id="class-teacher-actions-container">
+                </div>
+        </section>
         <section id="syllabus-tracker-section">
             <h2>Syllabus Trackers</h2>
             <div id="tracker-list-container">
@@ -30,18 +35,6 @@
                 <p>Loading classes...</p>
             </div>
         </section>
-<!-- 
-        <div class="dashboard-cards">
-            <div class="card">
-                <h2>Attendance</h2>
-                <p>Mark and view daily student attendance.</p>
-                <div class="form-group">
-                    <select id="attendance-class-select" class="form-control">
-                        <option value="">Select Class</option>
-                    </select>
-                </div>
-                <button id="mark-attendance-btn" class="btn primary-btn">Mark Attendance</button>
-            </div> -->
 
             <div class="card">
                 <h2>Content Generation</h2>
@@ -54,26 +47,7 @@
 
     <script src="../scripts/auth-check.js"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Check authentication on page load
-        checkTeacherAuth();
-
-        // Display teacher name from localStorage
-        const teacherData = JSON.parse(localStorage.getItem('teacherData') || '{}');
-        document.getElementById('teacher-name').textContent = teacherData.name || 'Teacher';
-
-        // Find the logout button and add a click event listener
-        const logoutBtn = document.getElementById('logout-btn');
-        logoutBtn.addEventListener('click', () => {
-            // Clear the user's token and data from storage
-            localStorage.removeItem('token');
-            localStorage.removeItem('teacherData');
-            localStorage.removeItem('adminData'); // Clear all
-
-            // ✅ Redirect to the homepage (index.html)
-            window.location.href = '/';
-        });
-    });
+    // ... (existing DOMContentLoaded script)
     </script>
     <script src="../scripts/navbar.js"></script>
     <script src="../scripts/include-navbar.js"></script>
