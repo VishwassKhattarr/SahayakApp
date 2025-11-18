@@ -2,24 +2,27 @@ import pkg from 'pg';
 const { Pool } = pkg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-// Helper function for the webhook
+// Helper function for the n8n webhook
 const callWebhook = async (data) => {
+  // --- MAKE SURE YOU ADD THIS TO YOUR .env FILE ---
   const webhookUrl = process.env.N8N_ATTENDANCE_WEBHOOK_URL;
+  
   if (!webhookUrl) {
-    console.warn('N8N_ATTENDANCE_WEBHOOK_URL not set. Skipping webhook.');
+    console.warn('N8N_ATTENDANCE_WEBHOOK_URL not set in .env. Skipping webhook.');
     return;
   }
 
   try {
+    // We don't need to wait for the webhook to finish
     // Using node-fetch (available in Node 18+)
-    await fetch(webhookUrl, {
+    fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    console.log('Successfully called attendance webhook.');
+    console.log('Successfully triggered attendance webhook.');
   } catch (error) {
-    console.error('Error calling attendance webhook:', error.message);
+    console.error('Error triggering attendance webhook:', error.message);
   }
 };
 
@@ -123,6 +126,7 @@ export const markAttendance = async (req, res) => {
     // 4. Start Transaction
     await client.query('BEGIN');
 
+    let allRecords = []; // To send to n8n
     // 5. Loop and Insert all records
     for (const record of attendance) {
       const { student_id, status, date } = record;
@@ -140,8 +144,22 @@ export const markAttendance = async (req, res) => {
         const insertQuery = `
           INSERT INTO attendance (enrollment_id, date, status, class_id, section_id, teacher_id)
           VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING id, enrollment_id, status, date
         `;
-        await client.query(insertQuery, [enrollmentId, date, status, classId, sectionId, teacherId]);
+        const newRecord = await client.query(insertQuery, [enrollmentId, date, status, classId, sectionId, teacherId]);
+        
+        // Add full record details for webhook
+        allRecords.push({
+            attendance_id: newRecord.rows[0].id,
+            student_id: student_id,
+            enrollment_id: newRecord.rows[0].enrollment_id,
+            status: newRecord.rows[0].status,
+            date: newRecord.rows[0].date,
+            section_id: sectionId,
+            class_id: classId,
+            teacher_id: teacherId
+        });
+
       } else {
         console.warn(`Could not find enrollment for student_id ${student_id} in section_id ${sectionId}. Skipping.`);
       }
@@ -154,9 +172,9 @@ export const markAttendance = async (req, res) => {
     callWebhook({
       sectionId: sectionId,
       date: today,
-      markedBy: teacherId,
+      markedByTeacherId: teacherId,
       status: 'success',
-      recordsCount: attendance.length
+      records: allRecords // Send all the details
     });
 
     res.status(201).json({ success: true, message: 'Attendance saved successfully!' });
