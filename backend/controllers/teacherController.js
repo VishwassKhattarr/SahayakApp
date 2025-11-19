@@ -168,24 +168,52 @@ export const assignTeacher = async (req, res) => {
   }
 };
 
-// --- NEW FUNCTION FOR ASSIGNING CLASS TEACHER ---
+// --- NEW FUNCTION FOR ASSIGNING CLASS TEACHER (ENFORCES 1:1) ---
 /**
  * Assigns a single "Class Teacher" to a section for a specific academic year.
- * This uses an "upsert" to replace any existing teacher for that section/year.
+ * This function enforces:
+ * 1. A teacher can only be assigned to ONE class (blocks if teacher is assigned elsewhere).
+ * 2. A class can only be assigned ONE teacher (overwrites previous teacher for the section).
  */
 export const assignClassTeacher = async (req, res) => {
-  try {
-    const { teacher_id, section_id, academic_year_id } = req.body;
+  const { teacher_id, section_id, academic_year_id } = req.body;
 
-    // Validation
-    if (!teacher_id || !section_id || !academic_year_id) {
-      return res.status(400).json({ success: false, message: 'Missing required fields (teacher, section, year)' });
+  // Validation
+  if (!teacher_id || !section_id || !academic_year_id) {
+    return res.status(400).json({ success: false, message: 'Missing required fields (teacher, section, year)' });
+  }
+  
+  // Get teacher name for use in messages
+  const teacherNameResult = await pool.query('SELECT name FROM teachers WHERE id = $1', [teacher_id]);
+  const teacherName = teacherNameResult.rows[0]?.name || 'Teacher';
+
+  try {
+    // 1. CHECK: If the teacher is ALREADY assigned to a section that is *not* the current section.
+    const teacherCheckQuery = `
+      SELECT section_id, CONCAT(c.class_name, '-', s.section_name) AS full_name 
+      FROM class_teacher_assignments cta
+      JOIN sections s ON cta.section_id = s.id
+      JOIN classes c ON s.class_id = c.id
+      WHERE cta.teacher_id = $1 AND cta.academic_year_id = $2
+    `;
+    const teacherCheck = await pool.query(teacherCheckQuery, [teacher_id, academic_year_id]);
+
+    if (teacherCheck.rows.length > 0) {
+      const existingAssignment = teacherCheck.rows[0];
+      
+      // If the teacher is already assigned to a DIFFERENT section, reject the request.
+      if (existingAssignment.section_id.toString() !== section_id.toString()) {
+        const existingSectionName = existingAssignment.full_name;
+        return res.status(409).json({ 
+          success: false, 
+          message: `${teacherName} is already assigned as Class Teacher for: ${existingSectionName}. One teacher can only be assigned to one class section.` 
+        });
+      }
+      // If assigned to the same section, the upsert below will simply re-affirm the assignment.
     }
     
-    // Upsert query: 
-    // Inserts a new assignment.
-    // If an assignment for that section+year already exists (conflict), 
-    // it UPDATES the teacher_id instead.
+    // 2. PROCEED: Overwrite the teacher for this specific section/year (Class/Section Check).
+    // This query is based on a UNIQUE constraint on (section_id, academic_year_id).
     const query = `
       INSERT INTO class_teacher_assignments (teacher_id, section_id, academic_year_id, assigned_on)
       VALUES ($1, $2, $3, CURRENT_DATE)
@@ -199,15 +227,22 @@ export const assignClassTeacher = async (req, res) => {
     const result = await pool.query(query, [teacher_id, section_id, academic_year_id]);
 
     if (result.rows.length > 0) {
-      res.json({ success: true, message: 'Class Teacher assigned successfully' });
+      // The message is slightly different based on if it was an INSERT or UPDATE on a section
+      const message = teacherCheck.rows.length > 0 && teacherCheck.rows[0].section_id.toString() === section_id.toString()
+        ? `Class Teacher assignment for ${teacherName} confirmed.`
+        : `Class Teacher ${teacherName} assigned successfully (previous teacher for the section was replaced).`;
+        
+      return res.json({ success: true, message: message });
     } else {
-      res.status(500).json({ success: false, message: 'Assignment failed, no row returned.' });
+      return res.status(500).json({ success: false, message: 'Assignment failed, no row returned.' });
     }
   } catch (error) {
     console.error('❌ Error assigning class teacher:', error.message);
-    res.status(500).json({ success: false, message: 'Server error assigning class teacher' });
+    return res.status(500).json({ success: false, message: 'Server error assigning class teacher' });
   }
 };
+
+
 // ... (at the end of backend/controllers/teacherController.js)
 
 /**
