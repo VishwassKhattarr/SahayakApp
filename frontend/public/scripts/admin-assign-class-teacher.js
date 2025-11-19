@@ -6,6 +6,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   const form = document.getElementById("assign-form");
   const statusMsg = document.getElementById("status-message");
 
+  // --- Add this check to ensure all elements are found ---
+  if (!teacherSelect || !classSelect || !sectionSelect || !yearSelect || !form || !statusMsg) {
+    console.error("One or more required DOM elements (teacher, class, section, year, assign-form, status-message) not found. Please check your HTML.");
+    if (statusMsg) {
+        statusMsg.textContent = "Error: Page elements missing. Cannot load functionality.";
+        statusMsg.style.color = 'red';
+    }
+    return; // Stop script execution if essential elements are missing
+  }
+  // --------------------------------------------------------
+
   // Helper function to fetch data and fill a dropdown
   const fetchAndFill = async (url, selectEl, fieldName) => {
     try {
@@ -84,7 +95,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         statusMsg.textContent = "✅ " + data.message;
         statusMsg.style.color = 'green';
         form.reset();
-        // Reset sections dropdown
+        // Reset sections dropdown (line 75 is here)
         sectionSelect.disabled = true;
         sectionSelect.innerHTML = '<option value="">-- Select Class First --</option>';
       } else {
